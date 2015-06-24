@@ -729,7 +729,7 @@ cdef extern from "net/if_types.h":
 
 cdef extern from "unistd.h":
     enum:
-        HOST_NAME_MAX
+        _SC_HOST_NAME_MAX
 
     cdef int gethostname(char* name, size_t namelen)
     cdef int sethostname(const char* name, int namelen)

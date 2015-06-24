@@ -1300,7 +1300,7 @@ def destroy_interface(name):
 
 
 def get_hostname():
-    cdef char buf[defs.HOST_NAME_MAX]
+    cdef char buf[defs._SC_HOST_NAME_MAX]
 
     if defs.gethostname(buf, cython.sizeof(buf)) != 0:
         raise OSError(errno, strerror(errno))
