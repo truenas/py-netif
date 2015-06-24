@@ -1297,3 +1297,15 @@ def destroy_interface(name):
 
     s.close()
     return ifr.ifr_name
+
+
+def get_hostname():
+    cdef char buf[defs.HOST_NAME_MAX]
+
+    if defs.gethostname(buf, cython.sizeof(buf)) != 0:
+        raise OSError(errno, strerror(errno))
+
+
+def set_hostname(newhostname):
+    if defs.sethostname(newhostname, len(newhostname)) != 0:
+        raise OSError(errno, strerror(errno))

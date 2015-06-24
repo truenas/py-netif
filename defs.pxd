@@ -252,8 +252,8 @@ cdef extern from "net/if.h":
         char ifan_name[IFNAMSIZ]
         u_short ifan_what
 
-    unsigned int if_nametoindex(const char* name)
-    char* if_indextoname(unsigned int ifindex, char *ifname)
+    cdef unsigned int if_nametoindex(const char* name)
+    cdef char* if_indextoname(unsigned int ifindex, char *ifname)
 
 #cdef extern from "netinet6/in6_var.h":
 #    cdef union in6_ifreq_ifru:
@@ -725,3 +725,11 @@ cdef extern from "net/if_types.h":
         IFT_ENC
         IFT_PFLOG
         IFT_PFSYNC
+
+
+cdef extern from "unistd.h":
+    enum:
+        HOST_NAME_MAX
+
+    cdef int gethostname(char* name, size_t namelen)
+    cdef int sethostname(const char* name, int namelen)
