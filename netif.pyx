@@ -369,6 +369,15 @@ class InterfaceAnnounceType(enum.IntEnum):
     DEPARTURE = defs.IFAN_DEPARTURE
 
 
+class AggregationProtocol(enum.IntEnum):
+    NONE = defs.LAGG_PROTO_NONE
+    ROUNDROBIN = defs.LAGG_PROTO_ROUNDROBIN
+    FAILOVER = defs.LAGG_PROTO_FAILOVER
+    LOADBALANCE = defs.LAGG_PROTO_LOADBALANCE
+    LACP = defs.LAGG_PROTO_LACP
+    ETHERCHANNEL = defs.LAGG_PROTO_ETHERCHANNEL
+
+
 class LinkAddress(object):
     def __init__(self, ifname=None, address=None):
         self.ifname = ifname
@@ -430,6 +439,12 @@ cdef class NetworkInterface(object):
     def __init__(self, name):
         self.name = name
         self.addresses = []
+
+    def __str__(self):
+        return "<netif.{0} name '{1}' type '{2}'>".format(self.__class__.__name__, self.name, self.type.name)
+
+    def __repr__(self):
+        return str(self)
 
     cdef int ioctl(self, uint32_t cmd, void* args):
         cdef int result
@@ -563,8 +578,34 @@ cdef class NetworkInterface(object):
             raise OSError(errno, strerror(errno))
 
 
-class LaggInterface(NetworkInterface):
-    pass
+cdef class LaggInterface(NetworkInterface):
+    def add_port(self, name):
+        cdef defs.lagg_reqport lreq
+        memset(&lreq, 0, cython.sizeof(lreq))
+        strcpy(lreq.rp_ifname, self.name)
+        strcpy(lreq.rp_portname, name)
+        if self.ioctl(defs.SIOCSLAGGPORT, <void*>&lreq) == -1:
+            raise OSError(errno, strerror(errno))
+
+    def delete_port(self, name):
+        cdef defs.lagg_reqport lreq
+        memset(&lreq, 0, cython.sizeof(lreq))
+        strcpy(lreq.rp_ifname, self.name)
+        strcpy(lreq.rp_portname, name)
+        if self.ioctl(defs.SIOCSLAGGDELPORT, <void*>&lreq) == -1:
+            raise OSError(errno, strerror(errno))
+
+    def configure(self, proto):
+        cdef defs.lagg_reqall lreq
+        memset(&lreq, 0, cython.sizeof(lreq))
+        strcpy(lreq.ra_ifname, self.name)
+        lreq.ra_proto = proto.value
+        if self.ioctl(defs.SIOCSLAGG, <void*>&lreq) == -1:
+            raise OSError(errno, strerror(errno))
+
+    property ports:
+        def __get__(self):
+            raise NotImplementedError()
 
 
 class CarpInterface(NetworkInterface):
@@ -588,6 +629,19 @@ cdef class VlanInterface(NetworkInterface):
         })
 
         return state
+
+    cdef get_vlan(self):
+        cdef defs.ifreq ifr
+        cdef defs.vlanreq vlr
+
+        memset(&vlr, 0, cython.sizeof(ifr))
+        strcpy(ifr.ifr_name, self.name)
+        ifr.ifr_ifru.ifru_data = <defs.caddr_t>&vlr
+
+        if self.ioctl(defs.SIOCGETVLAN, <void*>&ifr) == -1:
+            raise OSError(errno, strerror(errno))
+
+        return vlr.vlr_parent, vlr.vlr_tag
 
     def configure(self, parent, tag):
         cdef defs.ifreq ifr
@@ -617,13 +671,11 @@ cdef class VlanInterface(NetworkInterface):
 
     property parent:
         def __get__(self):
-            cdef defs.vlanreq vlr
-            memset(&vlr, 0, cython.sizeof(vlr))
+            return self.get_vlan()[0]
 
     property tag:
         def __get__(self):
-            cdef defs.vlanreq vlr
-            memset(&vlr, 0, cython.sizeof(vlr))
+            return self.get_vlan()[1]
 
 
 cdef class RoutingPacket(object):
@@ -778,7 +830,7 @@ cdef class RoutingPacket(object):
 
 
 cdef class InterfaceAnnounceMessage(RoutingPacket):
-    cdef defs.if_announcemsghdr *header
+    cdef defs.if_announcemsghdr* header
 
     def __init__(self, packet):
         super(InterfaceAnnounceMessage, self).__init__(packet)
@@ -803,7 +855,7 @@ cdef class InterfaceAnnounceMessage(RoutingPacket):
 
 
 cdef class InterfaceInfoMessage(RoutingPacket):
-    cdef defs.if_msghdr *header
+    cdef defs.if_msghdr* header
     cdef readonly object addrs
     cdef int addrs_mask
 
@@ -842,7 +894,7 @@ cdef class InterfaceInfoMessage(RoutingPacket):
             return ifname
 
 cdef class InterfaceAddrMessage(RoutingPacket):
-    cdef defs.ifa_msghdr *header
+    cdef defs.ifa_msghdr* header
     cdef readonly object addrs
     cdef int addrs_mask
 
@@ -1088,7 +1140,6 @@ class RoutingTable(object):
         msg = RoutingMessage()
         msg.type = type
         msg.route = route
-        print msg.__getstate__()
         self.__send_message(msg)
 
     @property
