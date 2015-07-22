@@ -595,17 +595,39 @@ cdef class LaggInterface(NetworkInterface):
         if self.ioctl(defs.SIOCSLAGGDELPORT, <void*>&lreq) == -1:
             raise OSError(errno, strerror(errno))
 
-    def configure(self, proto):
-        cdef defs.lagg_reqall lreq
-        memset(&lreq, 0, cython.sizeof(lreq))
-        strcpy(lreq.ra_ifname, self.name)
-        lreq.ra_proto = proto.value
-        if self.ioctl(defs.SIOCSLAGG, <void*>&lreq) == -1:
-            raise OSError(errno, strerror(errno))
+    property protocol:
+        def __get__(self):
+            cdef defs.lagg_reqall lreq
+            memset(&lreq, 0, cython.sizeof(lreq))
+            strcpy(lreq.ra_ifname, self.name)
+            if self.ioctl(defs.SIOCGLAGG, <void*>&lreq) == -1:
+                raise OSError(errno, strerror(errno))
+
+            return AggregationProtocol(lreq.ra_proto)
+
+        def __set__(self, value):
+            cdef defs.lagg_reqall lreq
+            memset(&lreq, 0, cython.sizeof(lreq))
+            strcpy(lreq.ra_ifname, self.name)
+            lreq.ra_proto = value.value
+            if self.ioctl(defs.SIOCSLAGG, <void*>&lreq) == -1:
+                raise OSError(errno, strerror(errno))
 
     property ports:
         def __get__(self):
-            raise NotImplementedError()
+            cdef defs.lagg_reqall lreq
+            cdef defs.lagg_reqport lport[16]
+            memset(&lreq, 0, cython.sizeof(lreq))
+            memset(lport, 0, cython.sizeof(lport))
+            strcpy(lreq.ra_ifname, self.name)
+            lreq.ra_size = cython.sizeof(lport)
+            lreq.ra_port = lport
+
+            if self.ioctl(defs.SIOCGLAGG, <void*>&lreq) == -1:
+                raise OSError(errno, strerror(errno))
+
+            for i in range(0, lreq.ra_ports):
+                yield lport[i].rp_portname
 
 
 class CarpInterface(NetworkInterface):
@@ -1233,6 +1255,7 @@ def list_interfaces(iname=None):
     cdef defs.sockaddr_in6* sin6
     cdef defs.sockaddr_dl* sdl
     cdef defs.sockaddr* sa
+    cdef NetworkInterface iface
 
     if defs.getifaddrs(&ifa) != 0:
         return None
@@ -1245,9 +1268,15 @@ def list_interfaces(iname=None):
 
         if name not in result:
             if name.startswith('vlan'):
-                result[name] = VlanInterface(name)
+                iface = VlanInterface.__new__(VlanInterface)
+            elif name.startswith('lagg'):
+                iface = LaggInterface.__new__(LaggInterface)
             else:
-                result[name] = NetworkInterface(name)
+                iface = NetworkInterface.__new__(NetworkInterface)
+
+            iface.name = name
+            iface.addresses = []
+            result[name] = iface
 
         nic = result[name]
         sa = ifa.ifa_addr
