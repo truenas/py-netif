@@ -579,6 +579,13 @@ cdef class NetworkInterface(object):
 
 
 cdef class LaggInterface(NetworkInterface):
+    def __getstate__(self):
+        state = super(LaggInterface, self).__getstate__()
+        state.update({
+            'protocol': self.protocol.name,
+            'ports': self.ports
+        })
+
     def add_port(self, name):
         cdef defs.lagg_reqport lreq
         memset(&lreq, 0, cython.sizeof(lreq))
