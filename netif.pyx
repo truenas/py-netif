@@ -630,10 +630,6 @@ cdef class LaggInterface(NetworkInterface):
                 yield lport[i].rp_portname
 
 
-class CarpInterface(NetworkInterface):
-    pass
-
-
 class BridgeInterface(NetworkInterface):
     def add_member(self, name):
         pass
