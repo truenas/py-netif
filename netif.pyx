@@ -384,6 +384,33 @@ class InterfaceMediaOptions(enum.IntEnum):
     FLAG1 = defs.IFM_FLAG1
     FLAG2 = defs.IFM_FLAG2
     LOOP = defs.IFM_LOOP
+    
+    
+class InterfaceCapability(enum.IntEnum):
+    RXCSUM = defs.IFCAP_RXCSUM
+    TXCSUM = defs.IFCAP_TXCSUM
+    NETCONS = defs.IFCAP_NETCONS
+    VLAN_MTU = defs.IFCAP_VLAN_MTU
+    VLAN_HWTAGGING = defs.IFCAP_VLAN_HWTAGGING
+    JUMBO_MTU = defs.IFCAP_JUMBO_MTU
+    POLLING = defs.IFCAP_POLLING
+    VLAN_HWCSUM = defs.IFCAP_VLAN_HWCSUM
+    TSO4 = defs.IFCAP_TSO4
+    TSO6 = defs.IFCAP_TSO6
+    LRO = defs.IFCAP_LRO
+    WOL_UCAST = defs.IFCAP_WOL_UCAST
+    WOL_MCAST = defs.IFCAP_WOL_MCAST
+    WOL_MAGIC = defs.IFCAP_WOL_MAGIC
+    TOE4 = defs.IFCAP_TOE4
+    TOE6 = defs.IFCAP_TOE6
+    VLAN_HWFILTER = defs.IFCAP_VLAN_HWFILTER
+    POLLING_NOCOUNT = defs.IFCAP_POLLING_NOCOUNT
+    VLAN_HWTSO = defs.IFCAP_VLAN_HWTSO
+    LINKSTATE = defs.IFCAP_LINKSTATE
+    NETMAP = defs.IFCAP_NETMAP
+    RXCSUM_IPV6 = defs.IFCAP_RXCSUM_IPV6
+    TXCSUM_IPV6 = defs.IFCAP_TXCSUM_IPV6
+    HWSTATS = defs.IFCAP_HWSTATS
 
 
 class InterfaceAnnounceType(enum.IntEnum):
@@ -468,7 +495,7 @@ cdef class NetworkInterface(object):
     def __repr__(self):
         return str(self)
 
-    cdef int query_media(self, defs.ifmediareq *ifm):
+    cdef int query_media(self, defs.ifmediareq* ifm):
         memset(ifm, 0, cython.sizeof(defs.ifmediareq))
         strcpy(ifm.ifm_name, self.name)
         if self.ioctl(defs.SIOCGIFMEDIA, <void*>ifm) == -1:
@@ -553,20 +580,35 @@ cdef class NetworkInterface(object):
             cdef defs.ifreq ifr
             memset(&ifr, 0, cython.sizeof(ifr))
             strcpy(ifr.ifr_name, self.name)
-            ifr.ifr_ifru.ifru_flags[0] = self._get_flags() & ~defs.IFF_UP
             if self.ioctl(defs.SIOCGIFMTU, <void*>&ifr) == -1:
                 raise OSError(errno, strerror(errno))
             return ifr.ifr_ifru.ifru_mtu
 
         def __set__(self, mtu):
-            raise NotImplementedError()
+            cdef defs.ifreq ifr
+            memset(&ifr, 0, cython.sizeof(ifr))
+            strcpy(ifr.ifr_name, self.name)
+            ifr.ifr_ifru.ifru_mtu = mtu
+            if self.ioctl(defs.SIOCSIFMTU, <void*>&ifr) == -1:
+                raise OSError(errno, strerror(errno))
 
     property capabilities:
         def __get__(self):
-            pass
+            cdef defs.ifreq ifr
+            memset(&ifr, 0, cython.sizeof(ifr))
+            strcpy(ifr.ifr_name, self.name)
+            if self.ioctl(defs.SIOCGIFCAP, <void*>&ifr) == -1:
+                raise OSError(errno, strerror(errno))
+
+            return bitmask_to_set(ifr.ifr_ifru.ifru_cap[1], InterfaceCapability)
 
         def __set__(self, value):
-            pass
+            cdef defs.ifreq ifr
+            memset(&ifr, 0, cython.sizeof(ifr))
+            strcpy(ifr.ifr_name, self.name)
+            ifr.ifr_ifru.ifru_cap[0] = set_to_bitmask(value)
+            if self.ioctl(defs.SIOCSIFCAP, <void*>&ifr) == -1:
+                raise OSError(errno, strerror(errno))
 
     property link_state:
         def __get__(self):
