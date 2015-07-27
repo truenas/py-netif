@@ -274,6 +274,25 @@ cdef extern from "net/if_media.h":
         int ifm_count
         int *ifm_ulist
 
+    cdef struct ifmedia_description:
+        int ifmt_word
+        const char *ifmt_string
+
+    enum:
+        IFM_SUBTYPE_ETHERNET_DESCRIPTIONS
+
+    enum:
+        IFM_AUTO
+        IFM_MANUAL
+        IFM_NONE
+        IFM_FDX
+        IFM_HDX
+        IFM_FLOW
+        IFM_FLAG0
+        IFM_FLAG1
+        IFM_FLAG2
+        IFM_LOOP
+
 
 cdef extern from "net/route.h":
     enum:
@@ -504,6 +523,32 @@ cdef extern from "net/if.h":
         IFF_STATICARP
         IFF_DYING
         IFF_RENAMING
+
+    enum:
+        IFCAP_RXCSUM
+        IFCAP_TXCSUM
+        IFCAP_NETCONS
+        IFCAP_VLAN_MTU
+        IFCAP_VLAN_HWTAGGING
+        IFCAP_JUMBO_MTU
+        IFCAP_POLLING
+        IFCAP_VLAN_HWCSUM
+        IFCAP_TSO4
+        IFCAP_TSO6
+        IFCAP_LRO
+        IFCAP_WOL_UCAST
+        IFCAP_WOL_MCAST
+        IFCAP_WOL_MAGIC
+        IFCAP_TOE4
+        IFCAP_TOE6
+        IFCAP_VLAN_HWFILTER
+        IFCAP_POLLING_NOCOUNT
+        IFCAP_VLAN_HWTSO
+        IFCAP_LINKSTATE
+        IFCAP_NETMAP
+        IFCAP_RXCSUM_IPV6
+        IFCAP_TXCSUM_IPV6
+        IFCAP_HWSTATS
 
 
 cdef extern from "net/if_media.h":

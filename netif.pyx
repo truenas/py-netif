@@ -44,6 +44,14 @@ from libc.stdlib cimport malloc, realloc, free
 CLONED_PREFIXES = ['lo', 'tun', 'tap', 'bridge', 'epair', 'carp', 'vlan']
 
 
+cdef struct ifmedia_type_to_subtype:
+    int foo
+
+cdef extern defs.ifmedia_description* get_toptype_desc(int ifmw)
+cdef extern ifmedia_type_to_subtype* get_toptype_ttos(int ifmw)
+cdef extern defs.ifmedia_description* get_subtype_desc(int ifmw, ifmedia_type_to_subtype *ttos)
+cdef extern defs.ifmedia_description* get_mode_desc(int ifmw, ifmedia_type_to_subtype *ttos)
+
 class AddressFamily(enum.IntEnum):
     UNIX = defs.AF_UNIX
     INET = defs.AF_INET
@@ -364,6 +372,19 @@ class InterfaceLinkState(enum.IntEnum):
     LINK_STATE_UP = defs.LINK_STATE_UP
 
 
+class InterfaceMediaOptions(enum.IntEnum):
+    AUTO = defs.IFM_AUTO
+    MANUAL = defs.IFM_MANUAL
+    NONE = defs.IFM_NONE
+    FDX = defs.IFM_FDX
+    HDX = defs.IFM_HDX
+    FLOW = defs.IFM_FLOW
+    FLAG0 = defs.IFM_FLAG0
+    FLAG1 = defs.IFM_FLAG1
+    FLAG2 = defs.IFM_FLAG2
+    LOOP = defs.IFM_LOOP
+
+
 class InterfaceAnnounceType(enum.IntEnum):
     ARRIVAL = defs.IFAN_ARRIVAL
     DEPARTURE = defs.IFAN_DEPARTURE
@@ -445,6 +466,14 @@ cdef class NetworkInterface(object):
 
     def __repr__(self):
         return str(self)
+
+    cdef int query_media(self, defs.ifmediareq *ifm):
+        memset(ifm, 0, cython.sizeof(defs.ifmediareq))
+        strcpy(ifm.ifm_name, self.name)
+        if self.ioctl(defs.SIOCGIFMEDIA, <void*>ifm) == -1:
+            return False
+
+        return True
 
     cdef int ioctl(self, uint32_t cmd, void* args):
         cdef int result
@@ -531,6 +560,13 @@ cdef class NetworkInterface(object):
         def __set__(self, mtu):
             raise NotImplementedError()
 
+    property capabilities:
+        def __get__(self):
+            pass
+
+        def __set__(self, value):
+            pass
+
     property link_state:
         def __get__(self):
             cdef defs.ifmediareq ifm
@@ -554,6 +590,47 @@ cdef class NetworkInterface(object):
 
         def __set__(self, address):
             raise NotImplementedError()
+
+    property media_type:
+        def __get__(self):
+            cdef defs.ifmediareq ifm
+            cdef defs.ifmedia_description* ifmt
+            if not self.query_media(&ifm):
+                raise OSError(errno, strerror(errno))
+
+            ifmt = get_toptype_desc(ifm.ifm_current)
+            return ifmt.ifmt_string
+
+    property media_subtype:
+        def __get__(self):
+            cdef defs.ifmediareq ifm
+            cdef defs.ifmedia_description* ifmt
+            cdef ifmedia_type_to_subtype* ttos
+
+            if not self.query_media(&ifm):
+                raise OSError(errno, strerror(errno))
+
+            ttos = get_toptype_ttos(ifm.ifm_current)
+            ifmt = get_subtype_desc(ifm.ifm_current, ttos)
+            return ifmt.ifmt_string
+
+        def __set__(self, value):
+            raise NotImplementedError()
+
+    property media_opts:
+        def __get__(self):
+            cdef defs.ifmediareq ifm
+            cdef defs.ifmedia_description* ifmt
+            cdef ifmedia_type_to_subtype* ttos
+
+            if not self.query_media(&ifm):
+                raise OSError(errno, strerror(errno))
+
+            return bitmask_to_set(ifm.ifm_current, InterfaceMediaOptions)
+
+        def __set__(self, value):
+            raise NotImplementedError()
+
 
     def add_address(self, address):
         self.aliasreq(address, defs.SIOCAIFADDR)

@@ -30,7 +30,7 @@ from Cython.Build import cythonize
 
 
 extensions = [
-    Extension("netif", ["netif.pyx"], extra_compile_args=["-g"])
+    Extension("netif", ["netif.pyx", "ifmedia.c"], extra_compile_args=["-g"])
 ]
 
 
