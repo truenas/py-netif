@@ -639,6 +639,9 @@ cdef class NetworkInterface(object):
             cdef defs.ifmediareq ifm
             cdef defs.ifmedia_description* ifmt
             if not self.query_media(&ifm):
+                if errno == 22: # Invalid argument
+                    return None
+
                 raise OSError(errno, strerror(errno))
 
             ifmt = get_toptype_desc(ifm.ifm_current)
@@ -651,6 +654,9 @@ cdef class NetworkInterface(object):
             cdef ifmedia_type_to_subtype* ttos
 
             if not self.query_media(&ifm):
+                if errno == 22: # Invalid argument
+                    return None
+
                 raise OSError(errno, strerror(errno))
 
             ttos = get_toptype_ttos(ifm.ifm_current)
@@ -667,6 +673,9 @@ cdef class NetworkInterface(object):
             cdef ifmedia_type_to_subtype* ttos
 
             if not self.query_media(&ifm):
+                if errno == 22: # Invalid argument
+                    return None
+                
                 raise OSError(errno, strerror(errno))
 
             return bitmask_to_set(ifm.ifm_current, InterfaceMediaOptions)
