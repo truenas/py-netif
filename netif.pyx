@@ -467,6 +467,21 @@ class InterfaceAddress(object):
     def __hash__(self):
         return hash((self.af, self.address, self.netmask, self.broadcast, self.dest_address))
 
+    def __getstate__(self):
+        ret = {
+            'family': self.af.name,
+            'address': self.address.address if type(self.address) is LinkAddress else str(self.address)
+        }
+
+        if self.netmask:
+            # XXX yuck!
+            ret['netmask'] = bin(int(self.netmask)).count('1')
+
+        if self.broadcast:
+            ret['broadcast'] = str(self.broadcast)
+
+        return ret
+
     def __eq__(self, other):
         return \
             self.af == other.af and \
@@ -551,6 +566,15 @@ cdef class NetworkInterface(object):
     def __getstate__(self):
         return {
             'name': self.name,
+            'mtu': self.mtu,
+            'cloned': self.cloned,
+            'flags': [i.name for i in self.flags],
+            'capabilities': [i.name for i in self.capabilities],
+            'link_state': self.link_state.name,
+            'media_type': self.media_type,
+            'media_subtype': self.media_subtype,
+            'media_options': [i.name for i in self.media_options] if self.media_options is not None else None,
+            'link-address': self.link_address.address.address,
             'addresses': [i.__getstate__() for i in self.addresses]
         }
 
