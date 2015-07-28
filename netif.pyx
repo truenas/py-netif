@@ -666,7 +666,7 @@ cdef class NetworkInterface(object):
         def __set__(self, value):
             raise NotImplementedError()
 
-    property media_opts:
+    property media_options:
         def __get__(self):
             cdef defs.ifmediareq ifm
             cdef defs.ifmedia_description* ifmt
@@ -675,7 +675,7 @@ cdef class NetworkInterface(object):
             if not self.query_media(&ifm):
                 if errno == 22: # Invalid argument
                     return None
-                
+
                 raise OSError(errno, strerror(errno))
 
             return bitmask_to_set(ifm.ifm_current, InterfaceMediaOptions)
