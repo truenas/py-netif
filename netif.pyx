@@ -361,7 +361,6 @@ class InterfaceType(enum.IntEnum):
     STF = defs.IFT_STF
     GIF = defs.IFT_GIF
     PVC = defs.IFT_PVC
-    FAITH = defs.IFT_FAITH
     ENC = defs.IFT_ENC
     PFLOG = defs.IFT_PFLOG
     PFSYNC = defs.IFT_PFSYNC

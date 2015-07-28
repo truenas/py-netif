@@ -803,7 +803,6 @@ cdef extern from "net/if_types.h":
         IFT_STF
         IFT_GIF
         IFT_PVC
-        IFT_FAITH
         IFT_ENC
         IFT_PFLOG
         IFT_PFSYNC
