@@ -44,14 +44,15 @@ from libc.stdlib cimport malloc, realloc, free
 CLONED_PREFIXES = ['lo', 'tun', 'tap', 'bridge', 'epair', 'carp', 'vlan']
 
 
-cdef struct ifmedia_type_to_subtype:
-    int dummy
+cdef extern from "ifmedia.h":
+    cdef struct ifmedia_type_to_subtype:
+        pass
 
-cdef extern defs.ifmedia_description* get_toptype_desc(int ifmw)
-cdef extern ifmedia_type_to_subtype* get_toptype_ttos(int ifmw)
-cdef extern defs.ifmedia_description* get_subtype_desc(int ifmw, ifmedia_type_to_subtype *ttos)
-cdef extern defs.ifmedia_description* get_mode_desc(int ifmw, ifmedia_type_to_subtype *ttos)
-cdef extern defs.ifmedia_description* get_subtype_by_name(const char *name, ifmedia_type_to_subtype *ttos)
+    cdef extern defs.ifmedia_description* get_toptype_desc(int ifmw)
+    cdef extern ifmedia_type_to_subtype* get_toptype_ttos(int ifmw)
+    cdef extern defs.ifmedia_description* get_subtype_desc(int ifmw, ifmedia_type_to_subtype *ttos)
+    cdef extern defs.ifmedia_description* get_mode_desc(int ifmw, ifmedia_type_to_subtype *ttos)
+    cdef extern defs.ifmedia_description* get_subtype_by_name(const char *name, ifmedia_type_to_subtype *ttos)
 
 
 class AddressFamily(enum.IntEnum):

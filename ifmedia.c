@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <net/if_media.h>
+#include "ifmedia.h"
 
 
 static struct ifmedia_description ifm_type_descriptions[] =
