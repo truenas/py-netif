@@ -51,6 +51,7 @@ cdef extern defs.ifmedia_description* get_toptype_desc(int ifmw)
 cdef extern ifmedia_type_to_subtype* get_toptype_ttos(int ifmw)
 cdef extern defs.ifmedia_description* get_subtype_desc(int ifmw, ifmedia_type_to_subtype *ttos)
 cdef extern defs.ifmedia_description* get_mode_desc(int ifmw, ifmedia_type_to_subtype *ttos)
+cdef extern defs.ifmedia_description* get_subtype_by_name(const char *name, ifmedia_type_to_subtype *ttos)
 
 
 class AddressFamily(enum.IntEnum):
@@ -372,7 +373,7 @@ class InterfaceLinkState(enum.IntEnum):
     LINK_STATE_UP = defs.LINK_STATE_UP
 
 
-class InterfaceMediaOptions(enum.IntEnum):
+class InterfaceMediaOption(enum.IntEnum):
     AUTO = defs.IFM_AUTO
     MANUAL = defs.IFM_MANUAL
     NONE = defs.IFM_NONE
@@ -687,7 +688,22 @@ cdef class NetworkInterface(object):
             return ifmt.ifmt_string
 
         def __set__(self, value):
-            raise NotImplementedError()
+            cdef defs.ifreq ifr
+            cdef defs.ifmediareq ifm
+            cdef defs.ifmedia_description* ifmt
+            cdef ifmedia_type_to_subtype* ttos
+
+            if not self.query_media(&ifm):
+                raise OSError(errno, strerror(errno))
+
+            ttos = get_toptype_ttos(ifm.ifm_current)
+            ifmt = get_subtype_by_name(value, ttos)
+
+            memset(&ifr, 0, cython.sizeof(ifr))
+            strcpy(ifr.ifr_name, self.name)
+            ifr.ifr_ifru.ifru_media = ifmt.ifmt_word
+            if self.ioctl(defs.SIOCSIFMEDIA, <void*>&ifr) == -1:
+                raise OSError(errno, strerror(errno))
 
     property media_options:
         def __get__(self):
@@ -697,14 +713,21 @@ cdef class NetworkInterface(object):
 
             if not self.query_media(&ifm):
                 if errno == 22: # Invalid argument
-                    return None
+                    return set()
 
                 raise OSError(errno, strerror(errno))
 
-            return bitmask_to_set(ifm.ifm_current, InterfaceMediaOptions)
+            return bitmask_to_set(ifm.ifm_current, InterfaceMediaOption)
 
         def __set__(self, value):
-            raise NotImplementedError()
+            cdef defs.ifmediareq ifm
+            cdef defs.ifmedia_description* ifmt
+            cdef ifmedia_type_to_subtype* ttos
+
+            ifm.ifm_current = set_to_bitmask(value)
+
+            if not self.query_media(&ifm):
+                raise OSError(errno, strerror(errno))
 
 
     def add_address(self, address):

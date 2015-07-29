@@ -101,21 +101,6 @@ static struct ifmedia_description ifm_shared_option_descriptions[] =
 static struct ifmedia_description ifm_shared_option_aliases[] =
     IFM_SHARED_OPTION_ALIASES;
 
-struct ifmedia_type_to_subtype {
-	struct {
-		struct ifmedia_description *desc;
-		int alias;
-	} subtypes[5];
-	struct {
-		struct ifmedia_description *desc;
-		int alias;
-	} options[4];
-	struct {
-		struct ifmedia_description *desc;
-		int alias;
-	} modes[3];
-};
-
 /* must be in the same order as IFM_TYPE_DESCRIPTIONS */
 static struct ifmedia_type_to_subtype ifmedia_types_to_subtypes[] = {
 	{
@@ -248,6 +233,25 @@ struct ifmedia_description *get_subtype_desc(int ifmw,
 		for (desc = ttos->subtypes[i].desc;
 		    desc->ifmt_string != NULL; desc++) {
 			if (IFM_SUBTYPE(ifmw) == desc->ifmt_word)
+				return desc;
+		}
+	}
+
+	return NULL;
+}
+
+struct ifmedia_description *get_subtype_by_name(const char *name,
+    struct ifmedia_type_to_subtype *ttos)
+{
+	int i;
+	struct ifmedia_description *desc;
+
+	for (i = 0; ttos->subtypes[i].desc != NULL; i++) {
+		if (ttos->subtypes[i].alias)
+			continue;
+		for (desc = ttos->subtypes[i].desc;
+		    desc->ifmt_string != NULL; desc++) {
+			if (!strcmp(desc->ifmt_string, name))
 				return desc;
 		}
 	}
