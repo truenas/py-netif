@@ -577,7 +577,7 @@ cdef class NetworkInterface(object):
             'media_subtype': self.media_subtype,
             'media_options': [i.name for i in self.media_options] if self.media_options is not None else None,
             'link-address': self.link_address.address.address,
-            'addresses': [i.__getstate__() for i in self.addresses]
+            'aliases': [i.__getstate__() for i in self.addresses]
         }
 
     cdef uint16_t _get_flags(self):
