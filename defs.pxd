@@ -255,14 +255,32 @@ cdef extern from "net/if.h":
     cdef unsigned int if_nametoindex(const char* name)
     cdef char* if_indextoname(unsigned int ifindex, char *ifname)
 
-#cdef extern from "netinet6/in6_var.h":
-#    cdef union in6_ifreq_ifru:
-#        int a
+cdef extern from "net/if_var.h":
+    pass
 
-#    cdef struct in6_ifreq:
-#        char ifr_name[IFNAMSIZ]
-#        in6_ifreq_ifru ifr_ifru
+cdef extern from "netinet6/in6_var.h":
+    enum:
+        SIOCAIFADDR_IN6
+        SIOCDIFADDR_IN6
 
+    cdef struct in6_addrlifetime:
+        time_t ia6t_expire
+        time_t ia6t_preferred
+        uint32_t ia6t_vltime
+        uint32_t ia6t_pltime
+
+    cdef struct in6_aliasreq:
+        char ifra_name[IFNAMSIZ]
+        sockaddr_in6 ifra_addr
+        sockaddr_in6 ifra_dstaddr
+        sockaddr_in6 ifra_prefixmask
+        int ifra_flags
+        in6_addrlifetime ifra_lifetime
+        int ifra_vhid
+
+cdef extern from "netinet6/nd6.h":
+    enum:
+        ND6_INFINITE_LIFETIME
 
 cdef extern from "net/if_media.h":
     cdef struct ifmediareq:

@@ -521,7 +521,7 @@ cdef class NetworkInterface(object):
 
     cdef int ioctl(self, uint32_t cmd, void* args):
         cdef int result
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
         result = defs.ioctl(s.fileno(), cmd, args)
         s.close()
         return result
@@ -530,7 +530,7 @@ cdef class NetworkInterface(object):
         cdef defs.sockaddr_in *sin
         cdef defs.sockaddr_in6 *sin6
         cdef defs.ifaliasreq req
-        #cdef defs.in6_ifaliasreq req6
+        cdef defs.in6_aliasreq req6
 
         if address.af == AddressFamily.INET:
             memset(&req, 0, cython.sizeof(req))
@@ -560,7 +560,28 @@ cdef class NetworkInterface(object):
 
             self.addresses.append(address)
         elif address.af == AddressFamily.INET6:
-            self.ioctl(cmd, <void*>&req)
+            memset(&req6, 0, cython.sizeof(req6))
+            strcpy(req6.ifra_name, self.name)
+            req6.ifra_lifetime.ia6t_vltime = defs.ND6_INFINITE_LIFETIME
+            req6.ifra_lifetime.ia6t_pltime = defs.ND6_INFINITE_LIFETIME
+
+            # Address
+            packed = address.address.packed[:16]
+            sin6 = <defs.sockaddr_in6*>&req6.ifra_addr
+            sin6.sin6_family = defs.AF_INET6
+            sin6.sin6_len = cython.sizeof(defs.sockaddr_in6)
+            memcpy(sin6.sin6_addr.s6_addr, <void*><char*>packed, 16)
+
+            # Netmask
+            packed = address.netmask.packed[:16]
+            sin6 = <defs.sockaddr_in6*>&req6.ifra_prefixmask
+            sin6.sin6_family = defs.AF_INET6
+            sin6.sin6_len = cython.sizeof(defs.sockaddr_in6)
+            memcpy(sin6.sin6_addr.s6_addr, <void*><char*>packed, 16)
+
+            if self.ioctl(cmd, <void*>&req6) == -1:
+                raise OSError(errno, strerror(errno))
+
             self.addresses.append(address)
         else:
             raise NotImplementedError()
@@ -732,10 +753,16 @@ cdef class NetworkInterface(object):
 
 
     def add_address(self, address):
-        self.aliasreq(address, defs.SIOCAIFADDR)
+        if address.af == AddressFamily.INET6:
+            self.aliasreq(address, defs.SIOCAIFADDR_IN6)
+        elif address.af == AddressFamily.INET:
+            self.aliasreq(address, defs.SIOCAIFADDR)
 
     def remove_address(self, address):
-        self.aliasreq(address, defs.SIOCDIFADDR)
+        if address.af == AddressFamily.INET6:
+            self.aliasreq(address, defs.SIOCDIFADDR_IN6)
+        elif address.af == AddressFamily.INET:
+            self.aliasreq(address, defs.SIOCDIFADDR)
 
     def down(self):
         cdef defs.ifreq ifr
@@ -1486,8 +1513,16 @@ def list_interfaces(iname=None):
                     addr.scope = sin6.sin6_scope_id
 
             if ifa.ifa_netmask != NULL:
-                sin6 = <defs.sockaddr_in6*>ifa.ifa_addr
+                sin6 = <defs.sockaddr_in6*>ifa.ifa_netmask
                 addr.netmask = ipaddress.ip_address(sin6.sin6_addr.s6_addr[:16])
+
+            if ifa.ifa_broadaddr != NULL:
+                sin6 = <defs.sockaddr_in6*>ifa.ifa_broadaddr
+                addr.broadcast = ipaddress.ip_address(sin6.sin6_addr.s6_addr[:16])
+
+            if ifa.ifa_dstaddr != NULL:
+                sin6 = <defs.sockaddr_in6*>ifa.ifa_dstaddr
+                addr.dest_address = ipaddress.ip_address(sin6.sin6_addr.s6_addr[:16])
 
         if sa.sa_family == defs.AF_LINK:
             if ifa.ifa_addr != NULL:
