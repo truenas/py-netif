@@ -519,9 +519,9 @@ cdef class NetworkInterface(object):
 
         return True
 
-    cdef int ioctl(self, uint32_t cmd, void* args):
+    cdef int ioctl(self, uint32_t cmd, void* args, af=socket.AF_INET):
         cdef int result
-        s = socket.socket(socket.AF_INET6, socket.SOCK_DGRAM)
+        s = socket.socket(af, socket.SOCK_DGRAM)
         result = defs.ioctl(s.fileno(), cmd, args)
         s.close()
         return result
@@ -579,7 +579,7 @@ cdef class NetworkInterface(object):
             sin6.sin6_len = cython.sizeof(defs.sockaddr_in6)
             memcpy(sin6.sin6_addr.s6_addr, <void*><char*>packed, 16)
 
-            if self.ioctl(cmd, <void*>&req6) == -1:
+            if self.ioctl(cmd, <void*>&req6, socket.AF_INET6) == -1:
                 raise OSError(errno, strerror(errno))
 
             self.addresses.append(address)
