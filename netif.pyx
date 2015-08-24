@@ -31,9 +31,9 @@ import array
 import os
 import socket
 import ipaddress
-import sysctl
 import enum
 import cython
+from bsd import sysctl
 cimport defs
 from libc.errno cimport *
 from libc.stdint cimport *
