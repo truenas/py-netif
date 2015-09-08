@@ -789,6 +789,8 @@ cdef class LaggInterface(NetworkInterface):
             'ports': self.ports
         })
 
+        return state
+
     def add_port(self, name):
         cdef defs.lagg_reqport lreq
         memset(&lreq, 0, cython.sizeof(lreq))
