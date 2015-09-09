@@ -428,6 +428,17 @@ class AggregationProtocol(enum.IntEnum):
     ETHERCHANNEL = defs.LAGG_PROTO_ETHERCHANNEL
 
 
+class NeighborDiscoveryFlags(enum.IntEnum):
+    PERFORMNUD = defs.ND6_IFF_PERFORMNUD
+    ACCEPT_RTADV = defs.ND6_IFF_ACCEPT_RTADV
+    PREFER_SOURCE = defs.ND6_IFF_PREFER_SOURCE
+    IFDISABLED = defs.ND6_IFF_IFDISABLED        
+    DONT_SET_IFROUTE = defs.ND6_IFF_DONT_SET_IFROUTE
+    AUTO_LINKLOCAL = defs.ND6_IFF_AUTO_LINKLOCAL
+    NO_RADR = defs.ND6_IFF_NO_RADR
+    NO_PREFER_IFACE = defs.ND6_IFF_NO_PREFER_IFACE
+
+
 class LinkAddress(object):
     def __init__(self, ifname=None, address=None):
         self.ifname = ifname
@@ -601,13 +612,30 @@ cdef class NetworkInterface(object):
             'aliases': [i.__getstate__() for i in self.addresses]
         }
 
-    cdef uint16_t _get_flags(self):
+    cdef uint32_t __get_flags(self) except? -1:
         cdef defs.ifreq ifr
         memset(&ifr, 0, cython.sizeof(ifr))
         strcpy(ifr.ifr_name, self.name)
+
         if self.ioctl(defs.SIOCGIFFLAGS, <void*>&ifr) == -1:
             raise OSError(errno, strerror(errno))
+
         return ifr.ifr_ifru.ifru_flags[0]
+
+    cdef uint32_t __rw_nd6_flags(self, value=None) except? -1:
+        cdef defs.in6_ndireq nd;
+        memset(&nd, 0, cython.sizeof(nd))
+        strcpy(nd.ifname, self.name)
+
+        if self.ioctl(defs.SIOCGIFINFO_IN6, <void*>&nd, af=AddressFamily.INET6) == -1:
+            raise OSError(errno, strerror(errno))
+
+        if value is None:
+            return nd.ndi.flags
+
+        nd.ndi.flags = value
+        if self.ioctl(defs.SIOCSIFINFO_IN6, <void*>&nd, af=AddressFamily.INET6) == -1:
+            raise OSError(errno, strerror(errno))
 
     property cloned:
         def __get__(self):
@@ -619,7 +647,14 @@ cdef class NetworkInterface(object):
 
     property flags:
         def __get__(self):
-            return bitmask_to_set(self._get_flags(), InterfaceFlags)
+            return bitmask_to_set(self.__get_flags(), InterfaceFlags)
+
+    property nd6_flags:
+        def __get__(self):
+            return bitmask_to_set(self.__rw_nd6_flags(), NeighborDiscoveryFlags)
+
+        def __set__(self, flags):
+            self.__rw_nd6_flags(set_to_bitmask(flags))
 
     property mtu:
         def __get__(self):
@@ -768,7 +803,7 @@ cdef class NetworkInterface(object):
         cdef defs.ifreq ifr
         memset(&ifr, 0, cython.sizeof(ifr))
         strcpy(ifr.ifr_name, self.name)
-        ifr.ifr_ifru.ifru_flags[0] = self._get_flags() & ~defs.IFF_UP
+        ifr.ifr_ifru.ifru_flags[0] = self.__get_flags() & ~defs.IFF_UP
         if self.ioctl(defs.SIOCSIFFLAGS, <void*>&ifr) == -1:
             raise OSError(errno, strerror(errno))
 
@@ -776,7 +811,7 @@ cdef class NetworkInterface(object):
         cdef defs.ifreq ifr
         memset(&ifr, 0, cython.sizeof(ifr))
         strcpy(ifr.ifr_name, self.name)
-        ifr.ifr_ifru.ifru_flags[0] = self._get_flags() | defs.IFF_UP
+        ifr.ifr_ifru.ifru_flags[0] = self.__get_flags() | defs.IFF_UP
         if self.ioctl(defs.SIOCSIFFLAGS, <void*>&ifr) == -1:
             raise OSError(errno, strerror(errno))
 

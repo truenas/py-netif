@@ -262,6 +262,8 @@ cdef extern from "netinet6/in6_var.h":
     enum:
         SIOCAIFADDR_IN6
         SIOCDIFADDR_IN6
+        SIOCGIFINFO_IN6
+        SIOCSIFINFO_IN6
 
     cdef struct in6_addrlifetime:
         time_t ia6t_expire
@@ -280,7 +282,35 @@ cdef extern from "netinet6/in6_var.h":
 
 cdef extern from "netinet6/nd6.h":
     enum:
+        ND6_IFF_PERFORMNUD
+        ND6_IFF_ACCEPT_RTADV
+        ND6_IFF_PREFER_SOURCE
+        ND6_IFF_IFDISABLED
+        ND6_IFF_DONT_SET_IFROUTE
+        ND6_IFF_AUTO_LINKLOCAL
+        ND6_IFF_NO_RADR
+        ND6_IFF_NO_PREFER_IFACE
+
+    enum:
         ND6_INFINITE_LIFETIME
+
+    cdef struct nd_ifinfo:
+        uint32_t linkmtu
+        uint32_t maxmtu
+        uint32_t basereachable
+        uint32_t reachable
+        uint32_t retrans
+        uint32_t flags
+        int recalctm
+        uint8_t chlim
+        uint8_t initialized
+        uint8_t randomseed0[8]
+        uint8_t randomseed1[8]
+        uint8_t randomid[8]
+
+    cdef struct in6_ndireq:
+        char ifname[IFNAMSIZ]
+        nd_ifinfo ndi
 
 cdef extern from "net/if_media.h":
     cdef struct ifmediareq:
