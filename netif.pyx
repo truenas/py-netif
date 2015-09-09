@@ -471,7 +471,7 @@ class InterfaceAddress(object):
 
     def __getstate__(self):
         ret = {
-            'family': self.af.name,
+            'type': self.af.name,
             'address': self.address.address if type(self.address) is LinkAddress else str(self.address)
         }
 
