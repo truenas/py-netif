@@ -603,6 +603,7 @@ cdef class NetworkInterface(object):
             'mtu': self.mtu,
             'cloned': self.cloned,
             'flags': [i.name for i in self.flags],
+            'nd6_flags': [i.name for i in self.nd6_flags],
             'capabilities': [i.name for i in self.capabilities],
             'link_state': self.link_state.name,
             'media_type': self.media_type,
