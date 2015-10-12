@@ -1,4 +1,3 @@
-#!/usr/local/bin/python2.7
 #+
 # Copyright 2015 iXsystems, Inc.
 # All rights reserved
@@ -609,7 +608,7 @@ cdef class NetworkInterface(object):
             'media_type': self.media_type,
             'media_subtype': self.media_subtype,
             'media_options': [i.name for i in self.media_options] if self.media_options is not None else None,
-            'link-address': self.link_address.address.address,
+            'link_address': self.link_address.address.address,
             'aliases': [i.__getstate__() for i in self.addresses]
         }
 
