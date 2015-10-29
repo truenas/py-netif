@@ -1507,7 +1507,7 @@ def list_interfaces(iname=None):
     result = {}
 
     while ifa:
-        name = ifa.ifa_name
+        name = ifa.ifa_name.decode('ascii')
 
         if name not in result:
             if name.startswith('vlan'):
@@ -1609,6 +1609,7 @@ def get_interface(name):
 
 
 def create_interface(name):
+    name = name.encode('ascii')
     cdef defs.ifreq ifr
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     strcpy(ifr.ifr_name, name)
@@ -1620,6 +1621,7 @@ def create_interface(name):
 
 
 def destroy_interface(name):
+    name = name.encode('ascii')
     cdef defs.ifreq ifr
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     strcpy(ifr.ifr_name, name)
@@ -1638,5 +1640,6 @@ def get_hostname():
 
 
 def set_hostname(newhostname):
+    newhostname = newhostname.encode('ascii')
     if defs.sethostname(newhostname, len(newhostname)) != 0:
         raise OSError(errno, strerror(errno))
