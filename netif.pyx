@@ -1567,7 +1567,7 @@ def list_interfaces(iname=None):
                 nic.type = InterfaceType(sdl.sdl_type)
                 addr.address = LinkAddress(
                     sdl.sdl_data[:sdl.sdl_nlen],
-                    ':'.join(['{0:02x}'.format(ord(x)) for x in sdl.sdl_data[sdl.sdl_nlen:sdl.sdl_nlen+sdl.sdl_alen]]))
+                    ':'.join(['{0:02x}'.format(x) for x in bytearray(sdl.sdl_data[sdl.sdl_nlen:sdl.sdl_nlen+sdl.sdl_alen])]))
 
         nic.addresses.append(addr)
 
