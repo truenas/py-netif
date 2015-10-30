@@ -1076,6 +1076,7 @@ cdef class RoutingPacket(object):
                 memset(sin6, 0, sa_size)
                 sin6.sin6_family = defs.AF_INET6
                 sin6.sin6_len = cython.sizeof(defs.sockaddr_in6)
+                memcpy(&sin6.sin6_addr, <char*>i.packed, 16)
                 ptr += sa_size
 
         return mask
