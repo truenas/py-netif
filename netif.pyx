@@ -982,7 +982,7 @@ cdef class RoutingPacket(object):
             defs.if_indextoname(sdl.sdl_index, ifname)
             result.ifname = ifname
 
-        result.address = ':'.join(['{0:02x}'.format(ord(x)) for x in sdl.sdl_data[sdl.sdl_nlen:sdl.sdl_nlen+sdl.sdl_alen]])
+        result.address = ':'.join(['{0:02x}'.format(x) for x in bytearray(sdl.sdl_data[sdl.sdl_nlen:sdl.sdl_nlen+sdl.sdl_alen])])
         return result
 
     cdef _parse_sockaddrs(self, int start_offset, int mask):
