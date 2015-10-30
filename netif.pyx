@@ -1048,7 +1048,6 @@ cdef class RoutingPacket(object):
 
             if type(i) is LinkAddress:
                 sa_size = self._align_sa_len(sizeof(defs.sockaddr_dl))
-                print 'sa_size={0}'.format(sa_size)
                 self._grow(sa_size)
                 sdl = <defs.sockaddr_dl*>&self.buffer[ptr]
                 memset(sdl, 0, sa_size)
@@ -1059,7 +1058,6 @@ cdef class RoutingPacket(object):
 
             elif i.version == 4:
                 sa_size = self._align_sa_len(sizeof(defs.sockaddr_in))
-                print 'sa_size={0}'.format(sa_size)
                 self._grow(sa_size)
                 sin = <defs.sockaddr_in*>&self.buffer[ptr]
                 memset(sin, 0, sa_size)
@@ -1070,7 +1068,6 @@ cdef class RoutingPacket(object):
 
             elif i.version == 6:
                 sa_size = self._align_sa_len(sizeof(defs.sockaddr_in6))
-                print 'sa_size={0}'.format(sa_size)
                 self._grow(sa_size)
                 sin6 = <defs.sockaddr_in6*>&self.buffer[ptr]
                 memset(sin6, 0, sa_size)
@@ -1490,7 +1487,6 @@ class RoutingSocket(object):
 
     def write_message(self, message):
         buf = message.as_buffer()
-        print repr(buf)
         os.write(self.socket.fileno(), buf)
 
 
