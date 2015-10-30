@@ -1411,12 +1411,12 @@ class RoutingTable(object):
 
     @property
     def default_route_ipv4(self):
-        f = filter(lambda r: int(r.network) == 0 and int(r.netmask) == 0 and r.af == AddressFamily.INET, self.routes)
+        f = list(filter(lambda r: int(r.network) == 0 and int(r.netmask) == 0 and r.af == AddressFamily.INET, self.routes))
         return f[0] if len(f) > 0 else None
 
     @property
     def default_route_ipv6(self):
-        f = filter(lambda r: int(r.network) == 0 and int(r.netmask) == 0 and r.af == AddressFamily.INET6, self.routes)
+        f = list(filter(lambda r: int(r.network) == 0 and int(r.netmask) == 0 and r.af == AddressFamily.INET6, self.routes))
         return f[0] if len(f) > 0 else None
 
     @property
@@ -1437,12 +1437,12 @@ class RoutingTable(object):
 
     @property
     def default_route(self):
-        f = filter(lambda r: r.network == ipaddress.ip_address(u'0.0.0.0'), self.routes)
+        f = list(filter(lambda r: r.network == ipaddress.ip_address(u'0.0.0.0'), self.routes))
         return f[0] if f else None
 
     @property
     def static_routes(self):
-        return filter(lambda r: RouteFlags.STATIC in r.flags and r.network != ipaddress.ip_address(u'0.0.0.0'), self.routes)
+        return list(filter(lambda r: RouteFlags.STATIC in r.flags and r.network != ipaddress.ip_address(u'0.0.0.0'), self.routes))
 
     def add(self, route):
         self.__send_route(RoutingMessageType.ADD, route)
