@@ -1022,12 +1022,6 @@ cdef class RoutingPacket(object):
                 if addr_sa_family == defs.AF_INET:
                     result[i] = ipaddress.ip_address(sa.sa_data[2:6])
 
-                if addr_sa_family == defs.AF_INET6:
-                    sin6 = <defs.sockaddr_in6*>sa
-                    memset(netmask, 0, sizeof(mask))
-                    memcpy(netmask, &sin6.sin6_addr, min(16, sa.sa_len - 8))
-                    result[i] = ipaddress.ip_address(netmask[:16])
-
         return result
 
     cdef _pack_sockaddrs(self, int start_offset, addrs):
