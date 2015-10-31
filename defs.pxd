@@ -614,39 +614,6 @@ cdef extern from "net/if_vlan_var.h":
         char vlr_parent[IFNAMSIZ]
         u_short vlr_tag
 
-
-cdef extern from "net/if_lagg.h":
-    ctypedef enum lagg_proto:
-        LAGG_PROTO_NONE
-        LAGG_PROTO_ROUNDROBIN
-        LAGG_PROTO_FAILOVER
-        LAGG_PROTO_LOADBALANCE
-        LAGG_PROTO_LACP
-        LAGG_PROTO_ETHERCHANNEL
-        LAGG_PROTO_BROADCAST
-        LAGG_PROTO_MAX
-
-    cdef struct lacp_opreq:
-        uint16_t actor_prio
-        uint8_t actor_mac[ETHER_ADDR_LEN]
-        uint16_t actor_key
-        uint16_t actor_portprio
-        uint16_t actor_portno
-        uint8_t actor_state
-        uint16_t partner_prio
-        uint8_t partner_mac[ETHER_ADDR_LEN]
-        uint16_t partner_key
-        uint16_t partner_portprio
-        uint16_t partner_portno
-        uint8_t partner_state
-
-    cdef struct lagg_reqport:
-        char rp_ifname[IFNAMSIZ]
-        char rp_portname[IFNAMSIZ]
-        uint32_t rp_prio
-        uint32_t rp_flags
-
-
         
 cdef extern from "net/if_types.h":
     enum:
