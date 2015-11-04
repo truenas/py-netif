@@ -832,7 +832,7 @@ cdef class LaggInterface(NetworkInterface):
         cdef defs.lagg_reqport lreq
         memset(&lreq, 0, cython.sizeof(lreq))
         strcpy(lreq.rp_ifname, self.nameb)
-        strcpy(lreq.rp_portname, name)
+        strcpy(lreq.rp_portname, name.encode('ascii'))
         if self.ioctl(defs.SIOCSLAGGPORT, <void*>&lreq) == -1:
             raise OSError(errno, strerror(errno))
 
@@ -840,7 +840,7 @@ cdef class LaggInterface(NetworkInterface):
         cdef defs.lagg_reqport lreq
         memset(&lreq, 0, cython.sizeof(lreq))
         strcpy(lreq.rp_ifname, self.nameb)
-        strcpy(lreq.rp_portname, name)
+        strcpy(lreq.rp_portname, name.encode('ascii'))
         if self.ioctl(defs.SIOCSLAGGDELPORT, <void*>&lreq) == -1:
             raise OSError(errno, strerror(errno))
 
@@ -876,7 +876,7 @@ cdef class LaggInterface(NetworkInterface):
                 raise OSError(errno, strerror(errno))
 
             for i in range(0, lreq.ra_ports):
-                yield lport[i].rp_portname
+                yield lport[i].rp_portname.decode('ascii')
 
 
 class BridgeInterface(NetworkInterface):
