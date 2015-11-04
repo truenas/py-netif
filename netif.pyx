@@ -916,7 +916,7 @@ cdef class VlanInterface(NetworkInterface):
 
         memset(&vlr, 0, cython.sizeof(ifr))
         strcpy(ifr.ifr_name, self.nameb)
-        strcpy(vlr.vlr_parent, parent)
+        strcpy(vlr.vlr_parent, parent.encode('ascii'))
         vlr.vlr_tag = tag
         ifr.ifr_ifru.ifru_data = <defs.caddr_t>&vlr
 
