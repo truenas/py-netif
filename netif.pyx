@@ -1286,7 +1286,7 @@ cdef class RoutingMessage(RoutingPacket):
             return result.decode('ascii') if result != NULL else None
 
         def __set__(self, value):
-            self.rt_msg.rtm_index = defs.if_nametoindex(value)
+            self.rt_msg.rtm_index = defs.if_nametoindex(value.encode('ascii'))
 
     property network:
         def __get__(self):
