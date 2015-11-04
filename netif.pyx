@@ -508,13 +508,13 @@ class InterfaceAddress(object):
 
 cdef class NetworkInterface(object):
     cdef readonly object name
-    cdef readonly object _nameb
+    cdef object nameb
     cdef public object type
     cdef readonly object addresses
 
     def __init__(self, name):
         self.name = name
-        self._nameb = name.encode('ascii')
+        self.nameb = name.encode('ascii')
         self.addresses = []
 
     def __str__(self):
@@ -525,7 +525,7 @@ cdef class NetworkInterface(object):
 
     cdef int query_media(self, defs.ifmediareq* ifm):
         memset(ifm, 0, cython.sizeof(defs.ifmediareq))
-        strcpy(ifm.ifm_name, self._nameb)
+        strcpy(ifm.ifm_name, self.nameb)
         if self.ioctl(defs.SIOCGIFMEDIA, <void*>ifm) == -1:
             return False
 
@@ -546,7 +546,7 @@ cdef class NetworkInterface(object):
 
         if address.af == AddressFamily.INET:
             memset(&req, 0, cython.sizeof(req))
-            strcpy(req.ifra_name, self._nameb)
+            strcpy(req.ifra_name, self.nameb)
 
             # Address
             sin = <defs.sockaddr_in*>&req.ifra_addr
@@ -573,7 +573,7 @@ cdef class NetworkInterface(object):
             self.addresses.append(address)
         elif address.af == AddressFamily.INET6:
             memset(&req6, 0, cython.sizeof(req6))
-            strcpy(req6.ifra_name, self._nameb)
+            strcpy(req6.ifra_name, self.nameb)
             req6.ifra_lifetime.ia6t_vltime = defs.ND6_INFINITE_LIFETIME
             req6.ifra_lifetime.ia6t_pltime = defs.ND6_INFINITE_LIFETIME
 
@@ -617,7 +617,7 @@ cdef class NetworkInterface(object):
     cdef uint32_t __get_flags(self) except? -1:
         cdef defs.ifreq ifr
         memset(&ifr, 0, cython.sizeof(ifr))
-        strcpy(ifr.ifr_name, self._nameb)
+        strcpy(ifr.ifr_name, self.nameb)
 
         if self.ioctl(defs.SIOCGIFFLAGS, <void*>&ifr) == -1:
             raise OSError(errno, strerror(errno))
@@ -627,7 +627,7 @@ cdef class NetworkInterface(object):
     cdef uint32_t __rw_nd6_flags(self, value=None) except? -1:
         cdef defs.in6_ndireq nd;
         memset(&nd, 0, cython.sizeof(nd))
-        strcpy(nd.ifname, self._nameb)
+        strcpy(nd.ifname, self.nameb)
 
         if self.ioctl(defs.SIOCGIFINFO_IN6, <void*>&nd, af=AddressFamily.INET6) == -1:
             raise OSError(errno, strerror(errno))
@@ -662,7 +662,7 @@ cdef class NetworkInterface(object):
         def __get__(self):
             cdef defs.ifreq ifr
             memset(&ifr, 0, cython.sizeof(ifr))
-            strcpy(ifr.ifr_name, self._nameb)
+            strcpy(ifr.ifr_name, self.nameb)
             if self.ioctl(defs.SIOCGIFMTU, <void*>&ifr) == -1:
                 raise OSError(errno, strerror(errno))
             return ifr.ifr_ifru.ifru_mtu
@@ -670,7 +670,7 @@ cdef class NetworkInterface(object):
         def __set__(self, mtu):
             cdef defs.ifreq ifr
             memset(&ifr, 0, cython.sizeof(ifr))
-            strcpy(ifr.ifr_name, self._nameb)
+            strcpy(ifr.ifr_name, self.nameb)
             ifr.ifr_ifru.ifru_mtu = mtu
             if self.ioctl(defs.SIOCSIFMTU, <void*>&ifr) == -1:
                 raise OSError(errno, strerror(errno))
@@ -679,7 +679,7 @@ cdef class NetworkInterface(object):
         def __get__(self):
             cdef defs.ifreq ifr
             memset(&ifr, 0, cython.sizeof(ifr))
-            strcpy(ifr.ifr_name, self._nameb)
+            strcpy(ifr.ifr_name, self.nameb)
             if self.ioctl(defs.SIOCGIFCAP, <void*>&ifr) == -1:
                 raise OSError(errno, strerror(errno))
 
@@ -688,7 +688,7 @@ cdef class NetworkInterface(object):
         def __set__(self, value):
             cdef defs.ifreq ifr
             memset(&ifr, 0, cython.sizeof(ifr))
-            strcpy(ifr.ifr_name, self._nameb)
+            strcpy(ifr.ifr_name, self.nameb)
             ifr.ifr_ifru.ifru_cap[0] = set_to_bitmask(value)
             if self.ioctl(defs.SIOCSIFCAP, <void*>&ifr) == -1:
                 raise OSError(errno, strerror(errno))
@@ -697,7 +697,7 @@ cdef class NetworkInterface(object):
         def __get__(self):
             cdef defs.ifmediareq ifm
             memset(&ifm, 0, cython.sizeof(ifm))
-            strcpy(ifm.ifm_name, self._nameb)
+            strcpy(ifm.ifm_name, self.nameb)
             if self.ioctl(defs.SIOCGIFMEDIA, <void*>&ifm) == -1:
                 if errno != 22: # Invalid argument
                     raise OSError(errno, strerror(errno))
@@ -759,7 +759,7 @@ cdef class NetworkInterface(object):
             ifmt = get_subtype_by_name(value, ttos)
 
             memset(&ifr, 0, cython.sizeof(ifr))
-            strcpy(ifr.ifr_name, self._nameb)
+            strcpy(ifr.ifr_name, self.nameb)
             ifr.ifr_ifru.ifru_media = ifmt.ifmt_word
             if self.ioctl(defs.SIOCSIFMEDIA, <void*>&ifr) == -1:
                 raise OSError(errno, strerror(errno))
@@ -804,7 +804,7 @@ cdef class NetworkInterface(object):
     def down(self):
         cdef defs.ifreq ifr
         memset(&ifr, 0, cython.sizeof(ifr))
-        strcpy(ifr.ifr_name, self._nameb)
+        strcpy(ifr.ifr_name, self.nameb)
         ifr.ifr_ifru.ifru_flags[0] = self.__get_flags() & ~defs.IFF_UP
         if self.ioctl(defs.SIOCSIFFLAGS, <void*>&ifr) == -1:
             raise OSError(errno, strerror(errno))
@@ -812,7 +812,7 @@ cdef class NetworkInterface(object):
     def up(self):
         cdef defs.ifreq ifr
         memset(&ifr, 0, cython.sizeof(ifr))
-        strcpy(ifr.ifr_name, self._nameb)
+        strcpy(ifr.ifr_name, self.nameb)
         ifr.ifr_ifru.ifru_flags[0] = self.__get_flags() | defs.IFF_UP
         if self.ioctl(defs.SIOCSIFFLAGS, <void*>&ifr) == -1:
             raise OSError(errno, strerror(errno))
@@ -831,7 +831,7 @@ cdef class LaggInterface(NetworkInterface):
     def add_port(self, name):
         cdef defs.lagg_reqport lreq
         memset(&lreq, 0, cython.sizeof(lreq))
-        strcpy(lreq.rp_ifname, self._nameb)
+        strcpy(lreq.rp_ifname, self.nameb)
         strcpy(lreq.rp_portname, name)
         if self.ioctl(defs.SIOCSLAGGPORT, <void*>&lreq) == -1:
             raise OSError(errno, strerror(errno))
@@ -839,7 +839,7 @@ cdef class LaggInterface(NetworkInterface):
     def delete_port(self, name):
         cdef defs.lagg_reqport lreq
         memset(&lreq, 0, cython.sizeof(lreq))
-        strcpy(lreq.rp_ifname, self._nameb)
+        strcpy(lreq.rp_ifname, self.nameb)
         strcpy(lreq.rp_portname, name)
         if self.ioctl(defs.SIOCSLAGGDELPORT, <void*>&lreq) == -1:
             raise OSError(errno, strerror(errno))
@@ -848,7 +848,7 @@ cdef class LaggInterface(NetworkInterface):
         def __get__(self):
             cdef defs.lagg_reqall lreq
             memset(&lreq, 0, cython.sizeof(lreq))
-            strcpy(lreq.ra_ifname, self._nameb)
+            strcpy(lreq.ra_ifname, self.nameb)
             if self.ioctl(defs.SIOCGLAGG, <void*>&lreq) == -1:
                 raise OSError(errno, strerror(errno))
 
@@ -857,7 +857,7 @@ cdef class LaggInterface(NetworkInterface):
         def __set__(self, value):
             cdef defs.lagg_reqall lreq
             memset(&lreq, 0, cython.sizeof(lreq))
-            strcpy(lreq.ra_ifname, self._nameb)
+            strcpy(lreq.ra_ifname, self.nameb)
             lreq.ra_proto = value.value
             if self.ioctl(defs.SIOCSLAGG, <void*>&lreq) == -1:
                 raise OSError(errno, strerror(errno))
@@ -868,7 +868,7 @@ cdef class LaggInterface(NetworkInterface):
             cdef defs.lagg_reqport lport[16]
             memset(&lreq, 0, cython.sizeof(lreq))
             memset(lport, 0, cython.sizeof(lport))
-            strcpy(lreq.ra_ifname, self._nameb)
+            strcpy(lreq.ra_ifname, self.nameb)
             lreq.ra_size = cython.sizeof(lport)
             lreq.ra_port = lport
 
@@ -902,7 +902,7 @@ cdef class VlanInterface(NetworkInterface):
         cdef defs.vlanreq vlr
 
         memset(&vlr, 0, cython.sizeof(ifr))
-        strcpy(ifr.ifr_name, self._nameb)
+        strcpy(ifr.ifr_name, self.nameb)
         ifr.ifr_ifru.ifru_data = <defs.caddr_t>&vlr
 
         if self.ioctl(defs.SIOCGETVLAN, <void*>&ifr) == -1:
@@ -915,7 +915,7 @@ cdef class VlanInterface(NetworkInterface):
         cdef defs.vlanreq vlr
 
         memset(&vlr, 0, cython.sizeof(ifr))
-        strcpy(ifr.ifr_name, self._nameb)
+        strcpy(ifr.ifr_name, self.nameb)
         strcpy(vlr.vlr_parent, parent)
         vlr.vlr_tag = tag
         ifr.ifr_ifru.ifru_data = <defs.caddr_t>&vlr
@@ -928,7 +928,7 @@ cdef class VlanInterface(NetworkInterface):
         cdef defs.vlanreq vlr
 
         memset(&vlr, 0, cython.sizeof(ifr))
-        strcpy(ifr.ifr_name, self._nameb)
+        strcpy(ifr.ifr_name, self.nameb)
         strcpy(vlr.vlr_parent, '\0')
         vlr.vlr_tag = 0
         ifr.ifr_ifru.ifru_data = <defs.caddr_t>&vlr
@@ -980,7 +980,7 @@ cdef class RoutingPacket(object):
         result = LinkAddress(sdl.sdl_data[:sdl.sdl_nlen])
         if not result.ifname:
             defs.if_indextoname(sdl.sdl_index, ifname)
-            result.ifname = ifname
+            result.ifname = ifname.decode('ascii')
 
         result.address = ':'.join(['{0:02x}'.format(x) for x in bytearray(sdl.sdl_data[sdl.sdl_nlen:sdl.sdl_nlen+sdl.sdl_alen])])
         return result
@@ -1121,7 +1121,7 @@ cdef class InterfaceAnnounceMessage(RoutingPacket):
 
     property interface:
         def __get__(self):
-            return self.header.ifan_name
+            return self.header.ifan_name.decode('ascii')
 
     property type:
         def __get__(self):
@@ -1165,7 +1165,7 @@ cdef class InterfaceInfoMessage(RoutingPacket):
         def __get__(self):
             cdef char ifname[defs.IFNAMSIZ]
             defs.if_indextoname(self.header.ifm_index, ifname)
-            return ifname
+            return ifname.decode('ascii')
 
 cdef class InterfaceAddrMessage(RoutingPacket):
     cdef defs.ifa_msghdr* header
@@ -1225,7 +1225,7 @@ cdef class InterfaceAddrMessage(RoutingPacket):
         def __get__(self):
             cdef char ifname[defs.IFNAMSIZ]
             defs.if_indextoname(self.header.ifam_index, ifname)
-            return ifname
+            return ifname.decode('ascii')
 
 
 cdef class RoutingMessage(RoutingPacket):
@@ -1283,7 +1283,7 @@ cdef class RoutingMessage(RoutingPacket):
             cdef char ifname[defs.IFNAMSIZ]
             cdef char* result
             result = defs.if_indextoname(self.rt_msg.rtm_index, ifname)
-            return result if result != NULL else None
+            return result.decode('ascii') if result != NULL else None
 
         def __set__(self, value):
             self.rt_msg.rtm_index = defs.if_nametoindex(value)
@@ -1526,7 +1526,7 @@ def list_interfaces(iname=None):
                 iface = NetworkInterface.__new__(NetworkInterface)
 
             iface.name = name
-            iface._nameb = name.encode('ascii')
+            iface.nameb = name.encode('ascii')
             iface.addresses = []
             result[name] = iface
 
