@@ -424,8 +424,8 @@ class AggregationProtocol(enum.IntEnum):
     FAILOVER = defs.LAGG_PROTO_FAILOVER
     LOADBALANCE = defs.LAGG_PROTO_LOADBALANCE
     LACP = defs.LAGG_PROTO_LACP
-    ETHERCHANNEL = defs.LAGG_PROTO_ETHERCHANNEL
-
+    IF FREEBSD_VERSION < 1100079:
+        ETHERCHANNEL = defs.LAGG_PROTO_ETHERCHANNEL
 
 class NeighborDiscoveryFlags(enum.IntEnum):
     PERFORMNUD = defs.ND6_IFF_PERFORMNUD

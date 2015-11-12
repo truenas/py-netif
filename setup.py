@@ -24,18 +24,21 @@
 # SUCH DAMAGE.
 #
 
+import subprocess
 from distutils.core import setup
-from distutils.extension import Extension
-from Cython.Build import cythonize
+from Cython.Distutils.extension import Extension
+from Cython.Distutils import build_ext
 
+freebsd_version = int(subprocess.check_output("uname -K", shell=True).strip())
 
 extensions = [
-    Extension("netif", ["netif.pyx", "ifmedia.c"], extra_compile_args=["-g"])
+    Extension("netif", ["netif.pyx", "ifmedia.c"], extra_compile_args=["-g"],
+    cython_compile_time_env={'FREEBSD_VERSION': freebsd_version})
 ]
-
 
 setup(
     name='netif',
     version='1.0',
-    ext_modules=cythonize(extensions)
+    cmdclass={'build_ext': build_ext},
+    ext_modules=extensions
 )
