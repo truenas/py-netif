@@ -1626,7 +1626,7 @@ def create_interface(name):
         raise OSError(errno, strerror(errno))
 
     s.close()
-    return ifr.ifr_name
+    return ifr.ifr_name.decode('ascii')
 
 
 def destroy_interface(name):
@@ -1638,7 +1638,7 @@ def destroy_interface(name):
         raise OSError(errno, strerror(errno))
 
     s.close()
-    return ifr.ifr_name
+    return ifr.ifr_name.decode('ascii')
 
 
 def get_hostname():
