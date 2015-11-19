@@ -933,7 +933,7 @@ cdef class BridgeInterface(NetworkInterface):
 
             for i in range(0, ifbc.ifbic_len / cython.sizeof(defs.ifbreq)):
                 ifbr = &ifbc.ifbic_req[i]
-                yield ifbr.ifbr_ifsname
+                yield ifbr.ifbr_ifsname.decode('ascii')
 
 
 cdef class VlanInterface(NetworkInterface):
