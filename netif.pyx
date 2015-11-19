@@ -894,7 +894,7 @@ cdef class BridgeInterface(NetworkInterface):
         strcpy(ifbr.ifbr_ifsname, name.encode('ascii'))
         self.bridge_cmd(defs.BRDGADD, &ifbr, cython.sizeof(ifbr), True)
 
-    def del_member(self, name):
+    def delete_member(self, name):
         cdef defs.ifbreq ifbr
 
         strcpy(ifbr.ifbr_ifsname, name.encode('ascii'))
