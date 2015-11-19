@@ -548,6 +548,56 @@ cdef extern from "net/if_lagg.h":
         lacp_opreq ra_lacpreq
 
 
+cdef extern from "net/if_bridgevar.h":
+    enum:
+        BRDGADD
+        BRDGDEL
+        BRDGGIFFLGS
+        BRDGSIFFLGS
+        BRDGSCACHE
+        BRDGGCACHE
+        BRDGGIFS
+        BRDGRTS
+        BRDGSADDR
+        BRDGSTO
+        BRDGGTO
+        BRDGDADDR
+        BRDGFLUSH
+        BRDGGPRI
+        BRDGSPRI
+        BRDGGHT
+        BRDGSHT
+        BRDGGFD
+        BRDGSFD
+        BRDGGMA
+        BRDGSMA
+        BRDGSIFPRIO
+        BRDGSIFCOST
+        BRDGADDS
+        BRDGDELS
+        BRDGPARAM
+        BRDGGRTE
+        BRDGGIFSSTP
+        BRDGSPROTO
+        BRDGSTXHC
+        BRDGSIFAMAX
+
+    cdef struct ifbreq:
+        char ifbr_ifsname[IFNAMSIZ];
+        uint32_t ifbr_ifsflags
+        uint32_t ifbr_stpflags
+        uint32_t ifbr_path_cost
+        uint8_t ifbr_portno
+        uint8_t ifbr_priority
+        uint8_t ifbr_proto
+        uint8_t ifbr_role
+        uint8_t ifbr_state
+        uint32_t ifbr_addrcnt
+        uint32_t ifbr_addrmax
+        uint32_t ifbr_addrexceeded
+        uint8_t pad[32]
+
+
 cdef extern from "net/if.h":
     enum:
         IFF_UP
