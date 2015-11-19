@@ -879,12 +879,53 @@ cdef class LaggInterface(NetworkInterface):
                 yield lport[i].rp_portname.decode('ascii')
 
 
-class BridgeInterface(NetworkInterface):
+cdef class BridgeInterface(NetworkInterface):
+    cdef bridge_cmd(self, cmd, void* arg, size_t size, int set):
+        cdef defs.ifdrv ifd
+
+        memset(&ifd, 0, cython.sizeof(ifd))
+        strcpy(ifd.ifd_name, self.nameb)
+        ifd.ifd_cmd = cmd
+        ifd.ifd_len = size
+        ifd.ifd_data = arg
+
+        if self.ioctl(defs.SIOCSDRVSPEC if set else defs.SIOCGDRVSPEC, <void*>&ifd) == -1:
+            raise OSError(errno, strerror(errno))
+
     def add_member(self, name):
-        pass
+        cdef defs.ifbreq ifbr
+
+        strcpy(ifbr.ifbr_ifsname, name.encode('ascii'))
+        self.bridge_cmd(defs.BRDGADD, &ifbr, cython.sizeof(ifbr), True)
 
     def del_member(self, name):
-        pass
+        cdef defs.ifbreq ifbr
+
+        strcpy(ifbr.ifbr_ifsname, name.encode('ascii'))
+        self.bridge_cmd(defs.BRDGDEL, &ifbr, cython.sizeof(ifbr), True)
+
+    property members:
+        def __get__(self):
+            cdef defs.ifbreq* ifbr = NULL
+            cdef defs.ifbifconf ifbc
+            cdef char *buf
+            cdef int size = 8192
+
+            while True:
+                buf = <char*>realloc(buf, size)
+                ifbc.ifbic_len = size
+                ifbc.ifbic_buf = <defs.caddr_t>buf
+
+                self.bridge_cmd(defs.BRDGGIFS, &ifbc, cython.sizeof(ifbc), False)
+
+                if (ifbc.ifbic_len + cython.sizeof(ifbr)) < size:
+                    break
+
+                size *= 2
+
+            for i in range(0, ifbc.ifbic_len / cython.sizeof(defs.ifbreq)):
+                ifbr = &ifbc.ifbic_req[i]
+                yield ifbr.ifbr_ifsname
 
 
 cdef class VlanInterface(NetworkInterface):
@@ -1522,6 +1563,8 @@ def list_interfaces(iname=None):
                 iface = VlanInterface.__new__(VlanInterface)
             elif name.startswith('lagg'):
                 iface = LaggInterface.__new__(LaggInterface)
+            elif name.startswith('bridge'):
+                iface = BridgeInterface.__new__(BridgeInterface)
             else:
                 iface = NetworkInterface.__new__(NetworkInterface)
 

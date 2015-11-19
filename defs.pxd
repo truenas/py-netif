@@ -597,6 +597,11 @@ cdef extern from "net/if_bridgevar.h":
         uint32_t ifbr_addrexceeded
         uint8_t pad[32]
 
+    cdef struct ifbifconf:
+        uint32_t ifbic_len
+        caddr_t ifbic_buf
+        ifbreq* ifbic_req
+
 
 cdef extern from "net/if.h":
     enum:
@@ -648,6 +653,11 @@ cdef extern from "net/if.h":
         IFCAP_TXCSUM_IPV6
         IFCAP_HWSTATS
 
+    cdef struct ifdrv:
+        char ifd_name[IFNAMSIZ]
+        unsigned long ifd_cmd
+        size_t ifd_len
+        void* ifd_data
 
 cdef extern from "net/if_media.h":
     enum:
