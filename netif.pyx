@@ -880,17 +880,13 @@ cdef class LaggInterface(NetworkInterface):
 
 
 cdef class BridgeInterface(NetworkInterface):
-    cdef bridge_cmd(self, cmd, void* arg, size_t size, int set):
-        cdef defs.ifdrv ifd
+    def __getstate__(self):
+        state = super(BridgeInterface, self).__getstate__()
+        state.update({
+            'members': list(self.members)
+        })
 
-        memset(&ifd, 0, cython.sizeof(ifd))
-        strcpy(ifd.ifd_name, self.nameb)
-        ifd.ifd_cmd = cmd
-        ifd.ifd_len = size
-        ifd.ifd_data = arg
-
-        if self.ioctl(defs.SIOCSDRVSPEC if set else defs.SIOCGDRVSPEC, <void*>&ifd) == -1:
-            raise OSError(errno, strerror(errno))
+        return state
 
     def add_member(self, name):
         cdef defs.ifbreq ifbr
@@ -903,6 +899,18 @@ cdef class BridgeInterface(NetworkInterface):
 
         strcpy(ifbr.ifbr_ifsname, name.encode('ascii'))
         self.bridge_cmd(defs.BRDGDEL, &ifbr, cython.sizeof(ifbr), True)
+
+    cdef bridge_cmd(self, cmd, void* arg, size_t size, int set):
+        cdef defs.ifdrv ifd
+
+        memset(&ifd, 0, cython.sizeof(ifd))
+        strcpy(ifd.ifd_name, self.nameb)
+        ifd.ifd_cmd = cmd
+        ifd.ifd_len = size
+        ifd.ifd_data = arg
+
+        if self.ioctl(defs.SIOCSDRVSPEC if set else defs.SIOCGDRVSPEC, <void*>&ifd) == -1:
+            raise OSError(errno, strerror(errno))
 
     property members:
         def __get__(self):
