@@ -570,7 +570,6 @@ cdef class NetworkInterface(object):
             if self.ioctl(cmd, <void*>&req) == -1:
                 raise OSError(errno, strerror(errno))
 
-            self.addresses.append(address)
         elif address.af == AddressFamily.INET6:
             memset(&req6, 0, cython.sizeof(req6))
             strcpy(req6.ifra_name, self.nameb)
@@ -594,7 +593,6 @@ cdef class NetworkInterface(object):
             if self.ioctl(cmd, <void*>&req6, socket.AF_INET6) == -1:
                 raise OSError(errno, strerror(errno))
 
-            self.addresses.append(address)
         else:
             raise NotImplementedError()
 
