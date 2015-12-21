@@ -842,11 +842,14 @@ cdef class NetworkInterface(object):
         if self.ioctl(defs.SIOCSIFFLAGS, <void*>&ifr) == -1:
             raise OSError(errno, strerror(errno))
 
-    def rename(self, new_name):
+    def rename(self, name):
         cdef defs.ifreq ifr
+        cdef char newname[defs.IFNAMSIZ]
+
         memset(&ifr, 0, cython.sizeof(ifr))
         strcpy(ifr.ifr_name, self.nameb)
-        ifr.ifr_ifru.ifru_data = new_name.encode('ascii')
+        strcpy(newname, name.encode('ascii'))
+        ifr.ifr_ifru.ifru_data = <defs.caddr_t><void*>newname
 
         if self.ioctl(defs.SIOCSIFNAME, <void*>&ifr) == -1:
             raise OSError(errno, strerror(errno))
