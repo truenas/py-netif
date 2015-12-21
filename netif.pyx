@@ -786,6 +786,33 @@ cdef class NetworkInterface(object):
             if not self.query_media(&ifm):
                 raise OSError(errno, strerror(errno))
 
+    property description:
+        def __get__(self):
+            cdef defs.ifreq ifr
+            cdef char buffer[1024]
+
+            memset(&ifr, 0, cython.sizeof(ifr))
+            strcpy(ifr.ifr_name, self.nameb)
+            ifr.ifr_ifru.ifru_buffer.length = cython.sizeof(buffer)
+            ifr.ifr_ifru.ifru_buffer.buffer = buffer
+
+            if self.ioctl(defs.SIOCGIFDESCR, <void*>&ifr) == -1:
+                raise OSError(errno, strerror(errno))
+
+            return buffer.decode('utf-8')
+
+        def __set__(self, descr):
+            cdef defs.ifreq ifr
+            cdef char buffer[1024]
+
+            memset(&ifr, 0, cython.sizeof(ifr))
+            strcpy(ifr.ifr_name, self.nameb)
+            strcpy(buffer, descr.encode('utf-8'))
+            ifr.ifr_ifru.ifru_buffer.length = cython.sizeof(buffer)
+            ifr.ifr_ifru.ifru_buffer.buffer = buffer
+
+            if self.ioctl(defs.SIOCSIFDESCR, <void*>&ifr) == -1:
+                raise OSError(errno, strerror(errno))
 
     def add_address(self, address):
         if address.af == AddressFamily.INET6:
