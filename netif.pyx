@@ -842,6 +842,15 @@ cdef class NetworkInterface(object):
         if self.ioctl(defs.SIOCSIFFLAGS, <void*>&ifr) == -1:
             raise OSError(errno, strerror(errno))
 
+    def rename(self, new_name):
+        cdef defs.ifreq ifr
+        memset(&ifr, 0, cython.sizeof(ifr))
+        strcpy(ifr.ifr_name, self.nameb)
+        ifr.ifr_ifru.ifru_data = new_name.encode('ascii')
+
+        if self.ioctl(defs.SIOCSIFNAME, <void*>&ifr) == -1:
+            raise OSError(errno, strerror(errno))
+
 
 cdef class LaggInterface(NetworkInterface):
     def __getstate__(self):
