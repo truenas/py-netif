@@ -854,6 +854,9 @@ cdef class NetworkInterface(object):
         if self.ioctl(defs.SIOCSIFNAME, <void*>&ifr) == -1:
             raise OSError(errno, strerror(errno))
 
+        self.name = name
+        self.nameb = name.encode('ascii')
+
 
 cdef class LaggInterface(NetworkInterface):
     def __getstate__(self):
