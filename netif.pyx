@@ -1065,8 +1065,8 @@ cdef class RoutingPacket(object):
 
         result = LinkAddress(sdl.sdl_data[:sdl.sdl_nlen])
         if not result.ifname:
-            defs.if_indextoname(sdl.sdl_index, ifname)
-            result.ifname = ifname.decode('ascii')
+            if defs.if_indextoname(sdl.sdl_index, ifname) != NULL:
+                result.ifname = ifname.decode('ascii')
 
         result.address = ':'.join(['{0:02x}'.format(x) for x in bytearray(sdl.sdl_data[sdl.sdl_nlen:sdl.sdl_nlen+sdl.sdl_alen])])
         return result
@@ -1250,8 +1250,10 @@ cdef class InterfaceInfoMessage(RoutingPacket):
     property interface:
         def __get__(self):
             cdef char ifname[defs.IFNAMSIZ]
-            defs.if_indextoname(self.header.ifm_index, ifname)
-            return ifname.decode('ascii')
+            if defs.if_indextoname(self.header.ifm_index, ifname) != NULL:
+                return ifname.decode('ascii')
+
+            return None
 
 cdef class InterfaceAddrMessage(RoutingPacket):
     cdef defs.ifa_msghdr* header
@@ -1310,8 +1312,10 @@ cdef class InterfaceAddrMessage(RoutingPacket):
     property interface:
         def __get__(self):
             cdef char ifname[defs.IFNAMSIZ]
-            defs.if_indextoname(self.header.ifam_index, ifname)
-            return ifname.decode('ascii')
+            if defs.if_indextoname(self.header.ifam_index, ifname) != NULL:
+                return ifname.decode('ascii')
+
+            return None
 
 
 cdef class RoutingMessage(RoutingPacket):
