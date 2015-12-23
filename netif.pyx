@@ -472,12 +472,10 @@ class InterfaceAddress(object):
             self.address = address.ip
             self.netmask = address.netmask
             self.broadcast = address.network.broadcast_address
-        elif isinstance(address, (ipaddress.IPv4Address, ipaddress.IPv6Address)):
+        else:
             self.address = address
             self.netmask = None
             self.broadcast = None
-        else:
-            raise ValueError('address must be an instance of ipaddress.IPv*Interface or ipaddress.IPv*Address')
 
         self.dest_address = None
         self.scope = None
