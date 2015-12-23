@@ -467,9 +467,18 @@ class LinkAddress(object):
 class InterfaceAddress(object):
     def __init__(self, af=None, address=None):
         self.af = af
-        self.address = address
-        self.netmask = None
-        self.broadcast = None
+
+        if isinstance(address, (ipaddress.IPv4Interface, ipaddress.IPv6Interface)):
+            self.address = address.ip
+            self.netmask = address.netmask
+            self.broadcast = address.network.broadcast_address
+        elif isinstance(address, (ipaddress.IPv4Address, ipaddress.IPv6Address)):
+            self.address = address
+            self.netmask = None
+            self.broadcast = None
+        else:
+            raise ValueError('address must be an instance of ipaddress.IPv*Interface or ipaddress.IPv*Address')
+
         self.dest_address = None
         self.scope = None
 
