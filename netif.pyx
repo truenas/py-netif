@@ -1715,8 +1715,8 @@ def set_to_bitmask(value):
     return result
 
 
-def get_interface(name, *types):
-    return list_interfaces(name, *types)
+def get_interface(name, **types):
+    return list_interfaces(name, **types)
 
 
 def create_interface(name):
