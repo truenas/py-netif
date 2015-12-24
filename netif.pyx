@@ -1599,7 +1599,7 @@ class RoutingSocket(object):
         os.write(self.socket.fileno(), buf)
 
 
-def list_interfaces(iname=None):
+def list_interfaces(iname=None, vlan=False, lagg=False, bridge=False):
     cdef defs.ifaddrs* ifa
     cdef defs.ifaddrs* orig
     cdef defs.sockaddr_in* sin
@@ -1618,11 +1618,11 @@ def list_interfaces(iname=None):
         name = ifa.ifa_name.decode('ascii')
 
         if name not in result:
-            if name.startswith('vlan'):
+            if name.startswith('vlan') or vlan:
                 iface = VlanInterface.__new__(VlanInterface)
-            elif name.startswith('lagg'):
+            elif name.startswith('lagg') or lagg:
                 iface = LaggInterface.__new__(LaggInterface)
-            elif name.startswith('bridge'):
+            elif name.startswith('bridge') or bridge:
                 iface = BridgeInterface.__new__(BridgeInterface)
             else:
                 iface = NetworkInterface.__new__(NetworkInterface)
@@ -1715,8 +1715,8 @@ def set_to_bitmask(value):
     return result
 
 
-def get_interface(name):
-    return list_interfaces(name)
+def get_interface(name, *types):
+    return list_interfaces(name, *types)
 
 
 def create_interface(name):
