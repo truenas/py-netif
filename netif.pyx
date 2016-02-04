@@ -512,6 +512,17 @@ class InterfaceAddress(object):
     def __ne__(self, other):
         return not self == other
 
+# wrap socket.socket on python2 so that we can use "with"
+if not hasattr(socket.socket, '__enter__'):
+    class WrapSocket(socket.socket):
+        def __enter__(self):
+            return self
+        def __exit__(self, exc_type, exc_val, exc_frame):
+            self.close()
+
+    sock3 = WrapSocket
+else:
+    sock3 = socket.socket
 
 cdef class NetworkInterface(object):
     cdef readonly object name
@@ -540,9 +551,8 @@ cdef class NetworkInterface(object):
 
     cdef int ioctl(self, uint32_t cmd, void* args, af=socket.AF_INET):
         cdef int result
-        s = socket.socket(af, socket.SOCK_DGRAM)
-        result = defs.ioctl(s.fileno(), cmd, args)
-        s.close()
+        with sock3(af, socket.SOCK_DGRAM) as s:
+            result = defs.ioctl(s.fileno(), cmd, args)
         return result
 
     cdef aliasreq(self, address, uint32_t cmd):
@@ -1730,24 +1740,20 @@ def get_interface(name, **types):
 def create_interface(name):
     name = name.encode('ascii')
     cdef defs.ifreq ifr
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    strcpy(ifr.ifr_name, name)
-    if defs.ioctl(s.fileno(), defs.SIOCIFCREATE, <void*>&ifr) == -1:
-        raise OSError(errno, strerror(errno))
-
-    s.close()
+    with sock3(socket.AF_INET, socket.SOCK_STREAM) as s:
+        strcpy(ifr.ifr_name, name)
+        if defs.ioctl(s.fileno(), defs.SIOCIFCREATE, <void*>&ifr) == -1:
+            raise OSError(errno, strerror(errno))
     return ifr.ifr_name.decode('ascii')
 
 
 def destroy_interface(name):
     name = name.encode('ascii')
     cdef defs.ifreq ifr
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    strcpy(ifr.ifr_name, name)
-    if defs.ioctl(s.fileno(), defs.SIOCIFDESTROY, <void*>&ifr) == -1:
-        raise OSError(errno, strerror(errno))
-
-    s.close()
+    with sock3(socket.AF_INET, socket.SOCK_STREAM) as s:
+        strcpy(ifr.ifr_name, name)
+        if defs.ioctl(s.fileno(), defs.SIOCIFDESTROY, <void*>&ifr) == -1:
+            raise OSError(errno, strerror(errno))
     return ifr.ifr_name.decode('ascii')
 
 
