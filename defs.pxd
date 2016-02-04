@@ -252,6 +252,22 @@ cdef extern from "net/if.h":
         char ifan_name[IFNAMSIZ]
         u_short ifan_what
 
+    cdef union ifgrq_ifgrqu:
+        char ifgrqu_group[IFNAMSIZ]
+        char ifgrqu_member[IFNAMSIZ]
+
+    cdef struct ifg_req:
+        ifgrq_ifgrqu ifgrq_ifgrqu
+
+    cdef union ifgr_ifgru:
+        char ifgru_group[IFNAMSIZ]
+        ifg_req *ifgru_groups
+
+    cdef struct ifgroupreq:
+        char ifgr_name[IFNAMSIZ]
+        unsigned int ifgr_len
+        ifgr_ifgru ifgr_ifgru
+
     cdef unsigned int if_nametoindex(const char* name)
     cdef char* if_indextoname(unsigned int ifindex, char *ifname)
 

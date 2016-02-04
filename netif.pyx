@@ -1616,34 +1616,69 @@ class RoutingSocket(object):
         buf = message.as_buffer()
         os.write(self.socket.fileno(), buf)
 
+def get_ifgroup(groupname):
+    """Given group name such as vnet or bridge, get group members"""
+    cdef defs.ifgroupreq ifgr
+    cdef defs.ifg_req *ifg
+    cdef int len
+    cdef char *mem
 
-def list_interfaces(iname=None, vlan=False, lagg=False, bridge=False):
-    cdef defs.ifaddrs* ifa
-    cdef defs.ifaddrs* orig
+    groupname = groupname.encode('ascii')
+    result = []
+    with sock3(socket.AF_UNIX, socket.SOCK_DGRAM) as s:
+        memset(&ifgr, 0, cython.sizeof(ifgr))
+        strcpy(ifgr.ifgr_name, groupname)
+        if defs.ioctl(s.fileno(), defs.SIOCGIFGMEMB, <void*>&ifgr) == -1:
+            if errno in (EINVAL, ENOTTY, ENOENT):
+                return result
+            raise OSError(errno, strerror(errno))
+        len = ifgr.ifgr_len
+        mem = NULL
+        try:
+            mem = <char*>malloc(len)
+            memset(mem, 0, len)
+            ifgr.ifgr_ifgru.ifgru_groups = <defs.ifg_req*>mem
+            if defs.ioctl(s.fileno(), defs.SIOCGIFGMEMB, <void*>&ifgr) == -1:
+                raise OSError(errno, strerror(errno))
+            ifg = ifgr.ifgr_ifgru.ifgru_groups
+            while len >= cython.sizeof(defs.ifg_req):
+                result.append(ifg.ifgrq_ifgrqu.ifgrqu_member.decode('ascii'))
+                ifg += 1
+                len -= cython.sizeof(defs.ifg_req)
+        finally:
+            if mem:
+                free(mem)
+    return result
+
+cdef list_interfaces_internal(names, typemap, defs.ifaddrs* ifa):
     cdef defs.sockaddr_in* sin
     cdef defs.sockaddr_in6* sin6
     cdef defs.sockaddr_dl* sdl
     cdef defs.sockaddr* sa
     cdef NetworkInterface iface
+    cdef object itype
 
-    if defs.getifaddrs(&ifa) != 0:
-        return None
+    if typemap is None:
+        # NB: we assume no vlan is a lagg, etc.  If someone has
+        # erroneously shoved an interface into multiple groups,
+        # the last one here overrides due to the update().
+        typemap = {}
+        typemap.update(dict((i, VlanInterface) for i in get_ifgroup('vlan')))
+        typemap.update(dict((i, LaggInterface) for i in get_ifgroup('lagg')))
+        typemap.update(dict((i, BridgeInterface)
+                            for i in get_ifgroup('bridge')))
 
-    orig = ifa
     result = {}
-
     while ifa:
         name = ifa.ifa_name.decode('ascii')
+        if names is not None and name not in names:
+            # caller doesn't care about this interface - skip it
+            ifa = ifa.ifa_next
+            continue
 
         if name not in result:
-            if name.startswith('vlan') or vlan:
-                iface = VlanInterface.__new__(VlanInterface)
-            elif name.startswith('lagg') or lagg:
-                iface = LaggInterface.__new__(LaggInterface)
-            elif name.startswith('bridge') or bridge:
-                iface = BridgeInterface.__new__(BridgeInterface)
-            else:
-                iface = NetworkInterface.__new__(NetworkInterface)
+            itype = typemap.get(name, NetworkInterface)
+            iface = itype.__new__(itype)
 
             iface.name = name
             iface.nameb = name.encode('ascii')
@@ -1700,16 +1735,43 @@ def list_interfaces(iname=None, vlan=False, lagg=False, bridge=False):
 
         nic.addresses.append(addr)
 
-        if ifa.ifa_next:
-            ifa = ifa.ifa_next
-        else:
-            break
+        ifa = ifa.ifa_next
 
-    defs.freeifaddrs(orig)
-    if iname:
-        return result[iname]
     return result
 
+def list_interfaces(names=None, typemap=None):
+    """
+    Return a dictionary of all interfaces in the system.
+
+    If you supply a list (or anything indexable, really) of names
+    and a type-map we'll only return interfaces that are in that
+    list and we'll use the type-mapper to make their instances.
+    This is mostly for internal use, in get_interface(), but it's
+    valid for any caller, e.g.:
+
+        result = list_interfaces(names=['em0', 'lo0'])
+
+    to get information on just those two interfaces, or:
+
+        result = list_interfaces(names=['mgmt0'],
+                                 typemap={'mgmt0': BridgeInterface})
+
+    to get information on mgmt0.  Note that the latter is
+    basically the same as:
+
+        get_interface('mgmt0', force_type='bridge')
+
+    but will return an empty dictionary if the interface doesn't
+    exist.
+    """
+    cdef defs.ifaddrs* ifa
+
+    if defs.getifaddrs(&ifa) != 0:
+        return None
+    try:
+        return list_interfaces_internal(names, typemap, ifa)
+    finally:
+        defs.freeifaddrs(ifa)
 
 def bitmask_to_set(n, enumeration):
     result = set()
@@ -1733,11 +1795,34 @@ def set_to_bitmask(value):
     return result
 
 
-def get_interface(name, **types):
-    return list_interfaces(name, **types)
+def get_interface(name, force_type=None, **kwargs):
+    """
+    Get the given interface.  Raises KeyError if interface does
+    not exist.  If force_type is provided it should be a string
+    in ('bridge', 'lagg', 'vlan') and it sets the type of the
+    interface.
+
+    For compatibility we temporarily allow bridge=True as a
+    keyword argument that sets force_type='bridge'.
+    """
+    typemap = None
+    if kwargs.pop('bridge', False):
+        force_type = 'bridge'
+    if kwargs:
+        raise TypeError('get_interface() got an unexpected keyword '
+                        'argument: ' + kwargs.popitem()[0])
+    if force_type is not None:
+        itype = {
+            'vlan': VlanInterface,
+            'lagg': LaggInterface,
+            'bridge': BridgeInterface,
+        }[force_type]
+        typemap = {name: itype}
+    return list_interfaces([name], typemap)[name]
 
 
 def create_interface(name):
+    """create new cloned interface (vlan, lagg, bridge)"""
     name = name.encode('ascii')
     cdef defs.ifreq ifr
     with sock3(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -1748,6 +1833,7 @@ def create_interface(name):
 
 
 def destroy_interface(name):
+    """destroy specified interface (probably should only use on clones)"""
     name = name.encode('ascii')
     cdef defs.ifreq ifr
     with sock3(socket.AF_INET, socket.SOCK_STREAM) as s:
