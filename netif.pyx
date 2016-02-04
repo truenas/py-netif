@@ -1331,16 +1331,24 @@ cdef class InterfaceAddrMessage(RoutingPacket):
 cdef class RoutingMessage(RoutingPacket):
     cdef readonly object addrs
     cdef int addrs_mask
+    cdef int free
 
     def __init__(self, packet=None):
         if not packet:
+            self.free = True
             self.bufsize = cython.sizeof(defs.rt_msghdr)
             self.buffer = <char*>malloc(self.bufsize)
             memset(self.buffer, 0, self.bufsize)
+        else:
+            self.free = False
 
         super(RoutingMessage, self).__init__(packet)
         self.addrs_mask = self.rt_msg.rtm_addrs
         self.addrs = self._parse_sockaddrs(cython.sizeof(defs.rt_msghdr), self.addrs_mask)
+
+    def __dealloc__(self):
+        if self.free:
+            free(self.buffer)
 
     def __getstate__(self):
         state = super(RoutingMessage, self).__getstate__()
