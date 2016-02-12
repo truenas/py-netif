@@ -438,6 +438,17 @@ class NeighborDiscoveryFlags(enum.IntEnum):
     NO_PREFER_IFACE = defs.ND6_IFF_NO_PREFER_IFACE
 
 
+class In6AddrFlags(enum.IntEnum):
+    ANYCAST = defs.IN6_IFF_ANYCAST
+    TENTATIVE = defs.IN6_IFF_TENTATIVE
+    DUPLICATED = defs.IN6_IFF_DUPLICATED
+    DETACHED = defs.IN6_IFF_DETACHED
+    DEPRECATED = defs.IN6_IFF_DEPRECATED
+    AUTOCONF = defs.IN6_IFF_AUTOCONF
+    TEMPORARY = defs.IN6_IFF_TEMPORARY
+    PREFER_SOURCE = defs.IN6_IFF_PREFER_SOURCE
+
+
 class LinkAddress(object):
     def __init__(self, ifname=None, address=None):
         self.ifname = ifname
@@ -479,6 +490,7 @@ class InterfaceAddress(object):
 
         self.dest_address = None
         self.scope = None
+        self.ipv6_flags = None
 
     def __str__(self):
         return u'{0}/{1}'.format(self.address, self.netmask)
@@ -1650,6 +1662,19 @@ def get_ifgroup(groupname):
                 free(mem)
     return result
 
+cdef int _get_in6_ifa_flags(char* name, defs.sockaddr_in6* sin6):
+    cdef defs.in6_ifreq ifr6
+
+    memset(&ifr6, 0, cython.sizeof(ifr6))
+    strcpy(ifr6.ifr_name, name)
+    ifr6.ifr_ifru.ifru_addr = sin6[0]
+    with sock3(socket.AF_INET6, socket.SOCK_DGRAM) as s:
+        if defs.ioctl(s.fileno(), defs.SIOCGIFAFLAG_IN6, <void*>&ifr6) == -1:
+            return -1
+        # Might want to get ifa lifetime here too, while
+        # we have ifr6 set up, and socket s.  But not yet.
+    return ifr6.ifr_ifru.ifru_flags6
+
 cdef list_interfaces_internal(names, typemap, defs.ifaddrs* ifa):
     cdef defs.sockaddr_in* sin
     cdef defs.sockaddr_in6* sin6
@@ -1657,6 +1682,7 @@ cdef list_interfaces_internal(names, typemap, defs.ifaddrs* ifa):
     cdef defs.sockaddr* sa
     cdef NetworkInterface iface
     cdef object itype
+    cdef int ia6_flags
 
     if typemap is None:
         # NB: we assume no vlan is a lagg, etc.  If someone has
@@ -1672,7 +1698,6 @@ cdef list_interfaces_internal(names, typemap, defs.ifaddrs* ifa):
     while ifa:
         name = ifa.ifa_name.decode('ascii')
         if names is not None and name not in names:
-            # caller doesn't care about this interface - skip it
             ifa = ifa.ifa_next
             continue
 
@@ -1710,6 +1735,16 @@ cdef list_interfaces_internal(names, typemap, defs.ifaddrs* ifa):
             if ifa.ifa_addr != NULL:
                 sin6 = <defs.sockaddr_in6*>ifa.ifa_addr
                 addr.address = ipaddress.ip_address(sin6.sin6_addr.s6_addr[:16])
+                # Get flags for this address.  Note that they're
+                # stored via the interface address (which is what
+                # we just got from the kernel) but it's possible that
+                # we lost a race and the address is gone already.
+                # It's not clear what to do in this case (ignore
+                # the address?).  For now, we leave addr.ipv6_flags
+                # set to None.
+                ia6_flags = _get_in6_ifa_flags(iface.nameb, sin6)
+                if ia6_flags != -1:
+                    addr.ipv6_flags = bitmask_to_set(ia6_flags, In6AddrFlags)
                 if str(addr.address).startswith('fe80:'):
                     addr.scope = sin6.sin6_scope_id
 
