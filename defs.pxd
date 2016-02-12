@@ -276,16 +276,104 @@ cdef extern from "net/if_var.h":
 
 cdef extern from "netinet6/in6_var.h":
     enum:
-        SIOCAIFADDR_IN6
-        SIOCDIFADDR_IN6
-        SIOCGIFINFO_IN6
-        SIOCSIFINFO_IN6
+        SIOCAIFADDR_IN6         # add in6 i/f addr, uses in6_aliasreq
+        SIOCDIFADDR_IN6         # del in6 i/f addr, uses in6_ifreq
+        SIOCGIFAFLAG_IN6        # get in6 i/f address flags, uses in6_ifreq
+        SIOCGIFALIFETIME_IN6    # get in6 address lifetime, uses in6_ifreq
+        SIOCSIFALIFETIME_IN6    # set in6 address lifetime, uses in6_ifreq
+        SIOCGIFINFO_IN6         # get in6 i/f info, uses in6_ndireq
+        SIOCSIFINFO_IN6         # set in6 i/f info, uses in6_ndireq
+
+    # in6 interface address flags (SIOCGIFAFLAG_IN6)
+    enum:
+        IN6_IFF_ANYCAST
+        IN6_IFF_TENTATIVE
+        IN6_IFF_DUPLICATED
+        IN6_IFF_DETACHED
+        IN6_IFF_DEPRECATED
+        # IN6_IFF_NODAD  - obsolete
+        IN6_IFF_AUTOCONF
+        IN6_IFF_TEMPORARY
+        IN6_IFF_PREFER_SOURCE
 
     cdef struct in6_addrlifetime:
         time_t ia6t_expire
         time_t ia6t_preferred
         uint32_t ia6t_vltime
         uint32_t ia6t_pltime
+
+    cdef struct in6_ifstat:
+        uint64_t ifs6_in_receive
+        uint64_t ifs6_in_hdrerr
+        uint64_t ifs6_in_toobig
+        uint64_t ifs6_in_noroute
+        uint64_t ifs6_in_addrerr
+        uint64_t ifs6_in_protounknown
+        uint64_t ifs6_in_truncated
+        uint64_t ifs6_in_discard
+        uint64_t ifs6_in_deliver
+        uint64_t ifs6_out_forward
+        uint64_t ifs6_out_request
+        uint64_t ifs6_out_discard
+        uint64_t ifs6_out_fragok
+        uint64_t ifs6_out_fragfail
+        uint64_t ifs6_out_fragcreat
+        uint64_t ifs6_reass_reqd
+        uint64_t ifs6_reass_ok
+        uint64_t ifs6_reass_fail
+        uint64_t ifs6_in_mcast
+        uint64_t ifs6_out_mcast
+
+    cdef struct icmp6_ifstat:
+        uint64_t ifs6_in_msg
+        uint64_t ifs6_in_error
+        uint64_t ifs6_in_dstunreach
+        uint64_t ifs6_in_adminprohib
+        uint64_t ifs6_in_timeexceed
+        uint64_t ifs6_in_paramprob
+        uint64_t ifs6_in_pkttoobig
+        uint64_t ifs6_in_echo
+        uint64_t ifs6_in_echoreply
+        uint64_t ifs6_in_routersolicit
+        uint64_t ifs6_in_routeradvert
+        uint64_t ifs6_in_neighborsolicit
+        uint64_t ifs6_in_neighboradvert
+        uint64_t ifs6_in_redirect
+        uint64_t ifs6_in_mldquery
+        uint64_t ifs6_in_mldreport
+        uint64_t ifs6_in_mlddone
+        uint64_t ifs6_out_msg
+        uint64_t ifs6_out_error
+        uint64_t ifs6_out_dstunreach
+        uint64_t ifs6_out_adminprohib
+        uint64_t ifs6_out_timeexceed
+        uint64_t ifs6_out_paramprob
+        uint64_t ifs6_out_pkttoobig
+        uint64_t ifs6_out_echo
+        uint64_t ifs6_out_echoreply
+        uint64_t ifs6_out_routersolicit
+        uint64_t ifs6_out_routeradvert
+        uint64_t ifs6_out_neighborsolicit
+        uint64_t ifs6_out_neighboradvert
+        uint64_t ifs6_out_redirect
+        uint64_t ifs6_out_mldquery
+        uint64_t ifs6_out_mldreport
+        uint64_t ifs6_out_mlddone
+
+    cdef union in6_ifreq_ifru:
+        sockaddr_in6 ifru_addr
+        sockaddr_in6 ifru_dstaddr
+        int ifru_flags
+        int ifru_flags6
+        char* ifru_data
+        in6_addrlifetime ifru_lifetime
+        in6_ifstat ifru_stat
+        icmp6_ifstat ifru_icmp6stat
+        uint32_t ifru_scope_id[16]
+
+    cdef struct in6_ifreq:
+        char ifr_name[IFNAMSIZ]
+        in6_ifreq_ifru ifr_ifru
 
     cdef struct in6_aliasreq:
         char ifra_name[IFNAMSIZ]
