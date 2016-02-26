@@ -892,7 +892,7 @@ cdef class LaggInterface(NetworkInterface):
         state = super(LaggInterface, self).__getstate__()
         state.update({
             'protocol': self.protocol.name,
-            'ports': self.ports
+            'ports': list(self.ports)
         })
 
         return state
