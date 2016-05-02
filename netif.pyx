@@ -427,6 +427,17 @@ class AggregationProtocol(enum.IntEnum):
     IF FREEBSD_VERSION < 1100079:
         ETHERCHANNEL = defs.LAGG_PROTO_ETHERCHANNEL
 
+
+class LaggPortFlags(enum.IntEnum):
+    SLAVE = defs.LAGG_PORT_SLAVE
+    MASTER = defs.LAGG_PORT_MASTER
+    STACK = defs.LAGG_PORT_STACK
+    ACTIVE = defs.LAGG_PORT_ACTIVE
+    COLLECTING = defs.LAGG_PORT_COLLECTING
+    DISTRIBUTING = defs.LAGG_PORT_DISTRIBUTING
+    DISABLED = defs.LAGG_PORT_DISABLED
+
+
 class NeighborDiscoveryFlags(enum.IntEnum):
     PERFORMNUD = defs.ND6_IFF_PERFORMNUD
     ACCEPT_RTADV = defs.ND6_IFF_ACCEPT_RTADV
@@ -892,7 +903,7 @@ cdef class LaggInterface(NetworkInterface):
         state = super(LaggInterface, self).__getstate__()
         state.update({
             'protocol': self.protocol.name,
-            'ports': list(self.ports)
+            'ports': [{'name': p, 'flags': [x.name for x in f]} for p, f in self.ports]
         })
 
         return state
@@ -945,7 +956,7 @@ cdef class LaggInterface(NetworkInterface):
                 raise OSError(errno, strerror(errno))
 
             for i in range(0, lreq.ra_ports):
-                yield lport[i].rp_portname.decode('ascii')
+                yield lport[i].rp_portname.decode('ascii'), bitmask_to_set(lport[i].rp_flags, LaggPortFlags)
 
 
 cdef class BridgeInterface(NetworkInterface):
