@@ -1037,7 +1037,7 @@ cdef class VlanInterface(NetworkInterface):
         if self.ioctl(defs.SIOCGETVLAN, <void*>&ifr) == -1:
             raise OSError(errno, strerror(errno))
 
-        return vlr.vlr_parent, vlr.vlr_tag
+        return vlr.vlr_parent.decode('ascii'), vlr.vlr_tag
 
     def configure(self, parent, tag):
         cdef defs.ifreq ifr
