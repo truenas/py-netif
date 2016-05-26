@@ -1524,7 +1524,7 @@ class Route(object):
 
     def __eq__(self, other):
         if not isinstance(other, Route):
-            False
+            return False
 
         return self.network == other.network and \
             self.netmask == other.netmask and \
