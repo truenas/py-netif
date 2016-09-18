@@ -639,6 +639,7 @@ cdef class NetworkInterface(object):
     def __getstate__(self):
         return {
             'name': self.name,
+            'description': self.description,
             'mtu': self.mtu,
             'cloned': self.cloned,
             'flags': [i.name for i in self.flags],
@@ -837,7 +838,7 @@ cdef class NetworkInterface(object):
             ifr.ifr_ifru.ifru_buffer.buffer = buffer
 
             if self.ioctl(defs.SIOCGIFDESCR, <void*>&ifr) == -1:
-                raise OSError(errno, strerror(errno))
+                return None
 
             return buffer.decode('utf-8')
 
