@@ -531,7 +531,8 @@ class InterfaceAddress(object):
             self.address == other.address and \
             self.netmask == other.netmask and \
             self.broadcast == other.broadcast and \
-            self.dest_address == other.dest_address
+            self.dest_address == other.dest_address and \
+            self.vhid == other.vhid
 
     def __ne__(self, other):
         return not self == other
