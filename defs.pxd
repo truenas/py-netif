@@ -786,6 +786,25 @@ cdef extern from "net/if_vlan_var.h":
         char vlr_parent[IFNAMSIZ]
         u_short vlr_tag
 
+
+cdef extern from "netinet/ip_carp.h":
+    enum:
+        CARP_MAXVHID
+        CARP_STATES
+        CARP_MAXSTATE
+        CARP_MAXSKEW
+        CARP_KEY_LEN
+        SIOCSVH
+        SIOCGVH
+
+    cdef struct carpreq:
+        int carpr_count
+        int carpr_vhid
+        int carpr_state
+        int carpr_advskew
+        int carpr_advbase
+        unsigned char carpr_key[CARP_KEY_LEN]
+
         
 cdef extern from "net/if_types.h":
     enum:

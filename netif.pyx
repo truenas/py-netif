@@ -502,6 +502,7 @@ class InterfaceAddress(object):
         self.dest_address = None
         self.scope = None
         self.ipv6_flags = None
+        self.vhid = None
 
     def __str__(self):
         return u'{0}/{1}'.format(self.address, self.netmask)
@@ -607,6 +608,9 @@ cdef class NetworkInterface(object):
                 sin.sin_len = cython.sizeof(defs.sockaddr_in)
                 sin.sin_addr.s_addr = socket.ntohl(int(address.broadcast))
 
+            if address.vhid:
+                req.ifra_vhid = address.vhid
+
             if self.ioctl(cmd, <void*>&req) == -1:
                 raise OSError(errno, strerror(errno))
 
@@ -629,6 +633,9 @@ cdef class NetworkInterface(object):
             sin6.sin6_family = defs.AF_INET6
             sin6.sin6_len = cython.sizeof(defs.sockaddr_in6)
             memcpy(sin6.sin6_addr.s6_addr, <void*><char*>packed, 16)
+
+            if address.vhid:
+                req.ifra_vhid = address.vhid
 
             if self.ioctl(cmd, <void*>&req6, socket.AF_INET6) == -1:
                 raise OSError(errno, strerror(errno))
@@ -855,6 +862,62 @@ cdef class NetworkInterface(object):
             if self.ioctl(defs.SIOCSIFDESCR, <void*>&ifr) == -1:
                 raise OSError(errno, strerror(errno))
 
+    property carp_config:
+        def __get__(self):
+            cdef defs.ifreq ifr
+            cdef defs.carpreq carpr[defs.CARP_MAXVHID]
+
+            memset(&ifr, 0, cython.sizeof(ifr))
+            strcpy(ifr.ifr_name, self.nameb)
+
+            memset(&carpr, 0, cython.sizeof(carpr))
+            ifr.ifr_ifru.ifru_data = <defs.caddr_t>&carpr
+            carpr[0].carpr_count = defs.CARP_MAXVHID
+            if self.ioctl(defs.SIOCGVH, <void*>&ifr) == -1:
+                raise OSError(errno, strerror(errno))
+
+            vhid_map = {}
+            for addr in self.addresses:
+                if addr.vhid:
+                    vhid_map[addr.vhid] = addr
+            for i in xrange(carpr[0].carpr_count):
+                addr = vhid_map.get(carpr[i].carpr_vhid)
+                yield CarpConfig(carpr[i].carpr_vhid, addr, carpr[i].carpr_advbase, carpr[i].carpr_advskew, carpr[i].carpr_key, carpr[i].carpr_state)
+
+        def __set__(self, value):
+            cdef defs.ifreq ifr
+            cdef defs.carpreq carpr
+
+            memset(&ifr, 0, cython.sizeof(ifr))
+            strcpy(ifr.ifr_name, self.nameb)
+
+            ifr.ifr_ifru.ifru_data = <defs.caddr_t>&carpr
+
+            for v in value:
+
+                memset(&carpr, 0, cython.sizeof(carpr))
+                carpr.carpr_count = 1
+
+                carpr.carpr_vhid = v.vhid
+                if v.advbase is not None:
+                    carpr.carpr_advbase = v.advbase
+                if v.advskew is not None:
+                    carpr.carpr_advskew = v.advskew
+                if v.key:
+                    carpr.carpr_key = v.key
+                if v.state is not None:
+                    carpr.carpr_state = v.state
+
+
+                if self.ioctl(defs.SIOCSVH, <void*>&ifr) == -1:
+                    raise OSError(errno, strerror(errno))
+
+                if v.addr:
+                    self.remove_address(v.addr)
+                    v.addr.vhid = v.vhid
+                    self.add_address(v.addr)
+
+
     def add_address(self, address):
         if address.af == AddressFamily.INET6:
             self.aliasreq(address, defs.SIOCAIFADDR_IN6)
@@ -897,6 +960,16 @@ cdef class NetworkInterface(object):
 
         self.name = name
         self.nameb = name.encode('ascii')
+
+
+class CarpConfig(object):
+    def __init__(self, vhid, addr, advbase=None, advskew=None, key=None, state=None):
+        self.vhid = vhid
+        self.addr = addr
+        self.advbase = advbase
+        self.advskew = advskew
+        self.key = key
+        self.state = state
 
 
 cdef class LaggInterface(NetworkInterface):
@@ -1695,6 +1768,7 @@ cdef list_interfaces_internal(names, typemap, defs.ifaddrs* ifa):
     cdef defs.sockaddr_in6* sin6
     cdef defs.sockaddr_dl* sdl
     cdef defs.sockaddr* sa
+    cdef defs.if_data* ifd
     cdef NetworkInterface iface
     cdef object itype
     cdef int ia6_flags
@@ -1746,6 +1820,10 @@ cdef list_interfaces_internal(names, typemap, defs.ifaddrs* ifa):
                 sin = <defs.sockaddr_in*>ifa.ifa_dstaddr
                 addr.dest_address = ipaddress.ip_address(socket.ntohl(sin.sin_addr.s_addr))
 
+            ifd = <defs.if_data*>ifa.ifa_data
+            if ifd.ifi_vhid != 0:
+                addr.vhid = ifd.ifi_vhid
+
         if sa.sa_family == defs.AF_INET6:
             if ifa.ifa_addr != NULL:
                 sin6 = <defs.sockaddr_in6*>ifa.ifa_addr
@@ -1774,6 +1852,10 @@ cdef list_interfaces_internal(names, typemap, defs.ifaddrs* ifa):
             if ifa.ifa_dstaddr != NULL:
                 sin6 = <defs.sockaddr_in6*>ifa.ifa_dstaddr
                 addr.dest_address = ipaddress.ip_address(sin6.sin6_addr.s6_addr[:16])
+
+            ifd = <defs.if_data*>ifa.ifa_data
+            if ifd.ifi_vhid != 0:
+                addr.vhid = ifd.ifi_vhid
 
         if sa.sa_family == defs.AF_LINK:
             if ifa.ifa_addr != NULL:
