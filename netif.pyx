@@ -656,6 +656,8 @@ cdef class NetworkInterface(object):
             'link_state': self.link_state.name,
             'media_type': self.media_type,
             'media_subtype': self.media_subtype,
+            'active_media_type': self.active_media_type,
+            'active_media_subtype': self.active_media_subtype,
             'media_options': [i.name for i in self.media_options] if self.media_options is not None else None,
             'link_address': self.link_address.address.address,
             'aliases': [i.__getstate__() for i in self.addresses]
@@ -777,6 +779,19 @@ cdef class NetworkInterface(object):
             ifmt = get_toptype_desc(ifm.ifm_current)
             return ifmt.ifmt_string.decode('ascii')
 
+    property active_media_type:
+        def __get__(self):
+            cdef defs.ifmediareq ifm
+            cdef defs.ifmedia_description* ifmt
+            if not self.query_media(&ifm):
+                if errno == 22: # Invalid argument
+                    return None
+
+                raise OSError(errno, strerror(errno))
+
+            ifmt = get_toptype_desc(ifm.ifm_active)
+            return ifmt.ifmt_string.decode('ascii')
+
     property media_subtype:
         def __get__(self):
             cdef defs.ifmediareq ifm
@@ -810,6 +825,22 @@ cdef class NetworkInterface(object):
             ifr.ifr_ifru.ifru_media = ifmt.ifmt_word
             if self.ioctl(defs.SIOCSIFMEDIA, <void*>&ifr) == -1:
                 raise OSError(errno, strerror(errno))
+
+    property active_media_subtype:
+        def __get__(self):
+            cdef defs.ifmediareq ifm
+            cdef defs.ifmedia_description* ifmt
+            cdef ifmedia_type_to_subtype* ttos
+
+            if not self.query_media(&ifm):
+                if errno == 22: # Invalid argument
+                    return None
+
+                raise OSError(errno, strerror(errno))
+
+            ttos = get_toptype_ttos(ifm.ifm_active)
+            ifmt = get_subtype_desc(ifm.ifm_active, ttos)
+            return ifmt.ifmt_string.decode('ascii')
 
     property media_options:
         def __get__(self):
