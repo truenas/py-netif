@@ -913,7 +913,7 @@ cdef class NetworkInterface(object):
                 if self.ioctl(defs.SIOCSVH, <void*>&ifr) == -1:
                     raise OSError(errno, strerror(errno))
 
-                if v.addr:
+                if v.addr and v.addr.vhid != v.vhid:
                     self.remove_address(v.addr)
                     v.addr.vhid = v.vhid
                     self.add_address(v.addr)
@@ -964,7 +964,7 @@ cdef class NetworkInterface(object):
 
 
 class CarpConfig(object):
-    def __init__(self, vhid, addr, advbase=None, advskew=None, key=None, state=None):
+    def __init__(self, vhid, addr=None, advbase=None, advskew=None, key=None, state=None):
         self.vhid = vhid
         self.addr = addr
         self.advbase = advbase
