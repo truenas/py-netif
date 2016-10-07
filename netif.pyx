@@ -36,7 +36,7 @@ from bsd import sysctl
 cimport defs
 from libc.errno cimport *
 from libc.stdint cimport *
-from libc.string cimport strcpy, strerror, memset, memcpy
+from libc.string cimport strcpy, memset, memcpy
 from libc.stdlib cimport malloc, realloc, free
 
 
@@ -613,7 +613,7 @@ cdef class NetworkInterface(object):
                 req.ifra_vhid = address.vhid
 
             if self.ioctl(cmd, <void*>&req) == -1:
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
 
         elif address.af == AddressFamily.INET6:
             memset(&req6, 0, cython.sizeof(req6))
@@ -639,7 +639,7 @@ cdef class NetworkInterface(object):
                 req.ifra_vhid = address.vhid
 
             if self.ioctl(cmd, <void*>&req6, socket.AF_INET6) == -1:
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
 
         else:
             raise NotImplementedError()
@@ -669,7 +669,7 @@ cdef class NetworkInterface(object):
         strcpy(ifr.ifr_name, self.nameb)
 
         if self.ioctl(defs.SIOCGIFFLAGS, <void*>&ifr) == -1:
-            raise OSError(errno, strerror(errno))
+            raise OSError(errno, os.strerror(errno))
 
         return ifr.ifr_ifru.ifru_flags[0]
 
@@ -679,14 +679,14 @@ cdef class NetworkInterface(object):
         strcpy(nd.ifname, self.nameb)
 
         if self.ioctl(defs.SIOCGIFINFO_IN6, <void*>&nd, af=AddressFamily.INET6) == -1:
-            raise OSError(errno, strerror(errno))
+            raise OSError(errno, os.strerror(errno))
 
         if value is None:
             return nd.ndi.flags
 
         nd.ndi.flags = value
         if self.ioctl(defs.SIOCSIFINFO_IN6, <void*>&nd, af=AddressFamily.INET6) == -1:
-            raise OSError(errno, strerror(errno))
+            raise OSError(errno, os.strerror(errno))
 
     property cloned:
         def __get__(self):
@@ -713,7 +713,7 @@ cdef class NetworkInterface(object):
             memset(&ifr, 0, cython.sizeof(ifr))
             strcpy(ifr.ifr_name, self.nameb)
             if self.ioctl(defs.SIOCGIFMTU, <void*>&ifr) == -1:
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
             return ifr.ifr_ifru.ifru_mtu
 
         def __set__(self, mtu):
@@ -722,7 +722,7 @@ cdef class NetworkInterface(object):
             strcpy(ifr.ifr_name, self.nameb)
             ifr.ifr_ifru.ifru_mtu = mtu
             if self.ioctl(defs.SIOCSIFMTU, <void*>&ifr) == -1:
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
 
     property capabilities:
         def __get__(self):
@@ -730,7 +730,7 @@ cdef class NetworkInterface(object):
             memset(&ifr, 0, cython.sizeof(ifr))
             strcpy(ifr.ifr_name, self.nameb)
             if self.ioctl(defs.SIOCGIFCAP, <void*>&ifr) == -1:
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
 
             return bitmask_to_set(ifr.ifr_ifru.ifru_cap[1], InterfaceCapability)
 
@@ -740,7 +740,7 @@ cdef class NetworkInterface(object):
             strcpy(ifr.ifr_name, self.nameb)
             ifr.ifr_ifru.ifru_cap[0] = set_to_bitmask(value)
             if self.ioctl(defs.SIOCSIFCAP, <void*>&ifr) == -1:
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
 
     property link_state:
         def __get__(self):
@@ -749,7 +749,7 @@ cdef class NetworkInterface(object):
             strcpy(ifm.ifm_name, self.nameb)
             if self.ioctl(defs.SIOCGIFMEDIA, <void*>&ifm) == -1:
                 if errno != 22: # Invalid argument
-                    raise OSError(errno, strerror(errno))
+                    raise OSError(errno, os.strerror(errno))
 
             if ifm.ifm_status & defs.IFM_AVALID:
                 if ifm.ifm_status & defs.IFM_ACTIVE:
@@ -774,7 +774,7 @@ cdef class NetworkInterface(object):
                 if errno == 22: # Invalid argument
                     return None
 
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
 
             ifmt = get_toptype_desc(ifm.ifm_current)
             return ifmt.ifmt_string.decode('ascii')
@@ -787,7 +787,7 @@ cdef class NetworkInterface(object):
                 if errno == 22: # Invalid argument
                     return None
 
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
 
             ifmt = get_toptype_desc(ifm.ifm_active)
             return ifmt.ifmt_string.decode('ascii')
@@ -802,7 +802,7 @@ cdef class NetworkInterface(object):
                 if errno == 22: # Invalid argument
                     return None
 
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
 
             ttos = get_toptype_ttos(ifm.ifm_current)
             ifmt = get_subtype_desc(ifm.ifm_current, ttos)
@@ -815,7 +815,7 @@ cdef class NetworkInterface(object):
             cdef ifmedia_type_to_subtype* ttos
 
             if not self.query_media(&ifm):
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
 
             ttos = get_toptype_ttos(ifm.ifm_current)
             ifmt = get_subtype_by_name(value, ttos)
@@ -824,7 +824,7 @@ cdef class NetworkInterface(object):
             strcpy(ifr.ifr_name, self.nameb)
             ifr.ifr_ifru.ifru_media = ifmt.ifmt_word
             if self.ioctl(defs.SIOCSIFMEDIA, <void*>&ifr) == -1:
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
 
     property active_media_subtype:
         def __get__(self):
@@ -836,7 +836,7 @@ cdef class NetworkInterface(object):
                 if errno == 22: # Invalid argument
                     return None
 
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
 
             ttos = get_toptype_ttos(ifm.ifm_active)
             ifmt = get_subtype_desc(ifm.ifm_active, ttos)
@@ -852,7 +852,7 @@ cdef class NetworkInterface(object):
                 if errno == 22: # Invalid argument
                     return set()
 
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
 
             return bitmask_to_set(ifm.ifm_current, InterfaceMediaOption)
 
@@ -864,7 +864,7 @@ cdef class NetworkInterface(object):
             ifm.ifm_current = set_to_bitmask(value)
 
             if not self.query_media(&ifm):
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
 
     property description:
         def __get__(self):
@@ -892,7 +892,7 @@ cdef class NetworkInterface(object):
             ifr.ifr_ifru.ifru_buffer.buffer = buffer
 
             if self.ioctl(defs.SIOCSIFDESCR, <void*>&ifr) == -1:
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
 
     property carp_config:
         def __get__(self):
@@ -906,7 +906,7 @@ cdef class NetworkInterface(object):
             ifr.ifr_ifru.ifru_data = <defs.caddr_t>&carpr
             carpr[0].carpr_count = defs.CARP_MAXVHID
             if self.ioctl(defs.SIOCGVH, <void*>&ifr) == -1:
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
 
             vhid_map = {}
             for addr in self.addresses:
@@ -942,7 +942,7 @@ cdef class NetworkInterface(object):
 
 
                 if self.ioctl(defs.SIOCSVH, <void*>&ifr) == -1:
-                    raise OSError(errno, strerror(errno))
+                    raise OSError(errno, os.strerror(errno))
 
                 if v.addr and v.addr.vhid != v.vhid:
                     self.remove_address(v.addr)
@@ -968,7 +968,7 @@ cdef class NetworkInterface(object):
         strcpy(ifr.ifr_name, self.nameb)
         ifr.ifr_ifru.ifru_flags[0] = self.__get_flags() & ~defs.IFF_UP
         if self.ioctl(defs.SIOCSIFFLAGS, <void*>&ifr) == -1:
-            raise OSError(errno, strerror(errno))
+            raise OSError(errno, os.strerror(errno))
 
     def up(self):
         cdef defs.ifreq ifr
@@ -976,7 +976,7 @@ cdef class NetworkInterface(object):
         strcpy(ifr.ifr_name, self.nameb)
         ifr.ifr_ifru.ifru_flags[0] = self.__get_flags() | defs.IFF_UP
         if self.ioctl(defs.SIOCSIFFLAGS, <void*>&ifr) == -1:
-            raise OSError(errno, strerror(errno))
+            raise OSError(errno, os.strerror(errno))
 
     def rename(self, name):
         cdef defs.ifreq ifr
@@ -988,7 +988,7 @@ cdef class NetworkInterface(object):
         ifr.ifr_ifru.ifru_data = <defs.caddr_t><void*>newname
 
         if self.ioctl(defs.SIOCSIFNAME, <void*>&ifr) == -1:
-            raise OSError(errno, strerror(errno))
+            raise OSError(errno, os.strerror(errno))
 
         self.name = name
         self.nameb = name.encode('ascii')
@@ -1020,7 +1020,7 @@ cdef class LaggInterface(NetworkInterface):
         strcpy(lreq.rp_ifname, self.nameb)
         strcpy(lreq.rp_portname, name.encode('ascii'))
         if self.ioctl(defs.SIOCSLAGGPORT, <void*>&lreq) == -1:
-            raise OSError(errno, strerror(errno))
+            raise OSError(errno, os.strerror(errno))
 
     def delete_port(self, name):
         cdef defs.lagg_reqport lreq
@@ -1028,7 +1028,7 @@ cdef class LaggInterface(NetworkInterface):
         strcpy(lreq.rp_ifname, self.nameb)
         strcpy(lreq.rp_portname, name.encode('ascii'))
         if self.ioctl(defs.SIOCSLAGGDELPORT, <void*>&lreq) == -1:
-            raise OSError(errno, strerror(errno))
+            raise OSError(errno, os.strerror(errno))
 
     property protocol:
         def __get__(self):
@@ -1036,7 +1036,7 @@ cdef class LaggInterface(NetworkInterface):
             memset(&lreq, 0, cython.sizeof(lreq))
             strcpy(lreq.ra_ifname, self.nameb)
             if self.ioctl(defs.SIOCGLAGG, <void*>&lreq) == -1:
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
 
             return AggregationProtocol(lreq.ra_proto)
 
@@ -1046,7 +1046,7 @@ cdef class LaggInterface(NetworkInterface):
             strcpy(lreq.ra_ifname, self.nameb)
             lreq.ra_proto = value.value
             if self.ioctl(defs.SIOCSLAGG, <void*>&lreq) == -1:
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
 
     property ports:
         def __get__(self):
@@ -1059,7 +1059,7 @@ cdef class LaggInterface(NetworkInterface):
             lreq.ra_port = lport
 
             if self.ioctl(defs.SIOCGLAGG, <void*>&lreq) == -1:
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
 
             for i in range(0, lreq.ra_ports):
                 yield lport[i].rp_portname.decode('ascii'), bitmask_to_set(lport[i].rp_flags, LaggPortFlags)
@@ -1096,7 +1096,7 @@ cdef class BridgeInterface(NetworkInterface):
         ifd.ifd_data = arg
 
         if self.ioctl(defs.SIOCSDRVSPEC if set else defs.SIOCGDRVSPEC, <void*>&ifd) == -1:
-            raise OSError(errno, strerror(errno))
+            raise OSError(errno, os.strerror(errno))
 
     property members:
         def __get__(self):
@@ -1141,7 +1141,7 @@ cdef class VlanInterface(NetworkInterface):
         ifr.ifr_ifru.ifru_data = <defs.caddr_t>&vlr
 
         if self.ioctl(defs.SIOCGETVLAN, <void*>&ifr) == -1:
-            raise OSError(errno, strerror(errno))
+            raise OSError(errno, os.strerror(errno))
 
         return vlr.vlr_parent.decode('ascii'), vlr.vlr_tag
 
@@ -1156,7 +1156,7 @@ cdef class VlanInterface(NetworkInterface):
         ifr.ifr_ifru.ifru_data = <defs.caddr_t>&vlr
 
         if self.ioctl(defs.SIOCSETVLAN, <void*>&ifr) == -1:
-            raise OSError(errno, strerror(errno))
+            raise OSError(errno, os.strerror(errno))
 
     def unconfigure(self):
         cdef defs.ifreq ifr
@@ -1169,7 +1169,7 @@ cdef class VlanInterface(NetworkInterface):
         ifr.ifr_ifru.ifru_data = <defs.caddr_t>&vlr
 
         if self.ioctl(defs.SIOCSETVLAN, <void*>&ifr) == -1:
-            raise OSError(errno, strerror(errno))
+            raise OSError(errno, os.strerror(errno))
 
     property parent:
         def __get__(self):
@@ -1763,7 +1763,7 @@ def get_ifgroup(groupname):
         if defs.ioctl(s.fileno(), defs.SIOCGIFGMEMB, <void*>&ifgr) == -1:
             if errno in (EINVAL, ENOTTY, ENOENT):
                 return result
-            raise OSError(errno, strerror(errno))
+            raise OSError(errno, os.strerror(errno))
         len = ifgr.ifgr_len
         mem = NULL
         try:
@@ -1771,7 +1771,7 @@ def get_ifgroup(groupname):
             memset(mem, 0, len)
             ifgr.ifgr_ifgru.ifgru_groups = <defs.ifg_req*>mem
             if defs.ioctl(s.fileno(), defs.SIOCGIFGMEMB, <void*>&ifgr) == -1:
-                raise OSError(errno, strerror(errno))
+                raise OSError(errno, os.strerror(errno))
             ifg = ifgr.ifgr_ifgru.ifgru_groups
             while len >= cython.sizeof(defs.ifg_req):
                 result.append(ifg.ifgrq_ifgrqu.ifgrqu_member.decode('ascii'))
@@ -1992,7 +1992,7 @@ def create_interface(name):
     with sock3(socket.AF_INET, socket.SOCK_STREAM) as s:
         strcpy(ifr.ifr_name, name)
         if defs.ioctl(s.fileno(), defs.SIOCIFCREATE, <void*>&ifr) == -1:
-            raise OSError(errno, strerror(errno))
+            raise OSError(errno, os.strerror(errno))
     return ifr.ifr_name.decode('ascii')
 
 
@@ -2003,7 +2003,7 @@ def destroy_interface(name):
     with sock3(socket.AF_INET, socket.SOCK_STREAM) as s:
         strcpy(ifr.ifr_name, name)
         if defs.ioctl(s.fileno(), defs.SIOCIFDESTROY, <void*>&ifr) == -1:
-            raise OSError(errno, strerror(errno))
+            raise OSError(errno, os.strerror(errno))
     return ifr.ifr_name.decode('ascii')
 
 
@@ -2011,10 +2011,10 @@ def get_hostname():
     cdef char buf[defs._SC_HOST_NAME_MAX]
 
     if defs.gethostname(buf, cython.sizeof(buf)) != 0:
-        raise OSError(errno, strerror(errno))
+        raise OSError(errno, os.strerror(errno))
 
 
 def set_hostname(newhostname):
     newhostname = newhostname.encode('ascii')
     if defs.sethostname(newhostname, len(newhostname)) != 0:
-        raise OSError(errno, strerror(errno))
+        raise OSError(errno, os.strerror(errno))
