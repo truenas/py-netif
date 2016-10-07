@@ -1257,10 +1257,10 @@ cdef class RoutingPacket(object):
                 if sa.sa_len == 0:
                     # default route
                     if addr_sa_family == defs.AF_INET:
-                        result[i] = ipaddress.ip_address('0.0.0.0')
+                        result[i] = ipaddress.ip_address(u'0.0.0.0')
 
                     if addr_sa_family == defs.AF_INET6:
-                        result[i] = ipaddress.ip_address('::')
+                        result[i] = ipaddress.ip_address(u'::')
 
                 else:
                     if addr_sa_family == defs.AF_INET:
