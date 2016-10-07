@@ -1173,11 +1173,11 @@ cdef class VlanInterface(NetworkInterface):
 
     property parent:
         def __get__(self):
-            return self.get_vlan()[0]
+            return self.get_vlan()[0] or None
 
     property tag:
         def __get__(self):
-            return self.get_vlan()[1]
+            return self.get_vlan()[1] or None
 
 
 cdef class RoutingPacket(object):
