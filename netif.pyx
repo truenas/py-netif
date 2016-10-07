@@ -936,7 +936,7 @@ cdef class NetworkInterface(object):
                 if v.advskew is not None:
                     carpr.carpr_advskew = v.advskew
                 if v.key:
-                    carpr.carpr_key = v.key
+                    strcpy(<char *>carpr.carpr_key, v.key)
                 if v.state is not None:
                     carpr.carpr_state = v.state
 
