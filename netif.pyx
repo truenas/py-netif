@@ -460,6 +460,12 @@ class In6AddrFlags(enum.IntEnum):
     PREFER_SOURCE = defs.IN6_IFF_PREFER_SOURCE
 
 
+class CarpState(enum.IntEnum):
+    INIT = 0
+    BACKUP = 1
+    MASTER = 2
+
+
 class LinkAddress(object):
     def __init__(self, ifname=None, address=None):
         self.ifname = ifname
@@ -938,7 +944,7 @@ cdef class NetworkInterface(object):
                 if v.key:
                     strcpy(<char *>carpr.carpr_key, v.key)
                 if v.state is not None:
-                    carpr.carpr_state = v.state
+                    carpr.carpr_state = v.state.value
 
 
                 if self.ioctl(defs.SIOCSVH, <void*>&ifr) == -1:
@@ -1001,7 +1007,7 @@ class CarpConfig(object):
         self.advbase = advbase
         self.advskew = advskew
         self.key = key
-        self.state = state
+        self.state = CarpState(state)
 
 
 cdef class LaggInterface(NetworkInterface):
