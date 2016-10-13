@@ -2019,8 +2019,25 @@ def get_hostname():
     if defs.gethostname(buf, cython.sizeof(buf)) != 0:
         raise OSError(errno, os.strerror(errno))
 
+    return buf
+
 
 def set_hostname(newhostname):
     newhostname = newhostname.encode('ascii')
     if defs.sethostname(newhostname, len(newhostname)) != 0:
+        raise OSError(errno, os.strerror(errno))
+
+
+def get_domainname():
+    cdef char buf[defs._SC_HOST_NAME_MAX]
+
+    if defs.getdomainname(buf, cython.sizeof(buf)) != 0:
+        raise OSError(errno, os.strerror(errno))
+
+    return buf
+
+
+def set_domainname(newdomainname):
+    newdomainname = newdomainname.encode('ascii')
+    if defs.setdomainname(newdomainname, len(newdomainname)) != 0:
         raise OSError(errno, os.strerror(errno))

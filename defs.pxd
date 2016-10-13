@@ -1018,5 +1018,7 @@ cdef extern from "unistd.h":
     enum:
         _SC_HOST_NAME_MAX
 
-    cdef int gethostname(char* name, size_t namelen)
-    cdef int sethostname(const char* name, int namelen)
+    int gethostname(char* name, size_t namelen)
+    int sethostname(const char* name, int namelen)
+    int getdomainname(char* name, size_t namelen)
+    int setdomainname(const char* name, int namelen)
