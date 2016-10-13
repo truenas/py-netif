@@ -1007,7 +1007,7 @@ class CarpConfig(object):
         self.advbase = advbase
         self.advskew = advskew
         self.key = key
-        self.state = CarpState(state)
+        self.state = CarpState(state) if state is not None else None
 
 
 cdef class LaggInterface(NetworkInterface):
