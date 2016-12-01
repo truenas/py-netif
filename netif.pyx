@@ -912,6 +912,8 @@ cdef class NetworkInterface(object):
             ifr.ifr_ifru.ifru_data = <defs.caddr_t>&carpr
             carpr[0].carpr_count = defs.CARP_MAXVHID
             if self.ioctl(defs.SIOCGVH, <void*>&ifr) == -1:
+                if errno == ENOENT:
+                    return
                 raise OSError(errno, os.strerror(errno))
 
             vhid_map = {}
