@@ -1001,6 +1001,15 @@ cdef class NetworkInterface(object):
         self.name = name
         self.nameb = name.encode('ascii')
 
+    property orig_name:
+        def __get__(self):
+            cdef defs.ifreq ifr
+            memset(&ifr, 0, cython.sizeof(ifr))
+            strcpy(ifr.ifr_name, self.nameb)
+            if self.ioctl(defs.SIOCGIFORIGNAME, <void*>&ifr) == -1:
+                raise OSError(errno, os.strerror(errno))
+            return ifr.ifr_name.decode('ascii')
+
 
 class CarpConfig(object):
     def __init__(self, vhid, addr=None, advbase=None, advskew=None, key=None, state=None):
