@@ -568,6 +568,7 @@ cdef extern from "sys/sockio.h":
         SIOCSIFNAME
         SIOCSIFDESCR
         SIOCGIFDESCR
+        SIOCGIFORIGNAME
         SIOCAIFADDR
         SIOCADDMULTI
         SIOCDELMULTI
