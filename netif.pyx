@@ -920,9 +920,17 @@ cdef class NetworkInterface(object):
             for addr in self.addresses:
                 if addr.vhid:
                     vhid_map[addr.vhid] = addr
-            for i in xrange(carpr[0].carpr_count):
+
+            for i in range(carpr[0].carpr_count):
                 addr = vhid_map.get(carpr[i].carpr_vhid)
-                yield CarpConfig(carpr[i].carpr_vhid, addr, carpr[i].carpr_advbase, carpr[i].carpr_advskew, carpr[i].carpr_key, carpr[i].carpr_state)
+                yield CarpConfig(
+                    carpr[i].carpr_vhid,
+                    addr,
+                    carpr[i].carpr_advbase,
+                    carpr[i].carpr_advskew,
+                    carpr[i].carpr_key,
+                    carpr[i].carpr_state
+                )
 
         def __set__(self, value):
             cdef defs.ifreq ifr
