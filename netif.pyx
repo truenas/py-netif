@@ -872,6 +872,36 @@ cdef class NetworkInterface(object):
             if not self.query_media(&ifm):
                 raise OSError(errno, os.strerror(errno))
 
+    property supported_media:
+        def __get__(self):
+            cdef defs.ifmediareq ifm
+            cdef defs.ifmedia_description* ifmt
+            cdef ifmedia_type_to_subtype* ttos
+            cdef int *ulist
+
+            if not self.query_media(&ifm):
+                if errno == 22: # Invalid argument
+                    return
+
+                raise OSError(errno, os.strerror(errno))
+
+            ulist = <int *>malloc(sizeof(int) * ifm.ifm_count)
+            ifm.ifm_ulist = ulist
+
+            if self.ioctl(defs.SIOCGIFMEDIA, <void*>&ifm) == -1:
+                free(<void *>ulist)
+                raise OSError(errno, os.strerror(errno))
+
+            try:
+                for i in range(ifm.ifm_count):
+                    ttos = get_toptype_ttos(ulist[i])
+                    ifmt = get_subtype_desc(ulist[i], ttos)
+                    if ifmt != NULL:
+                        yield ifmt.ifmt_string.decode('ascii')
+
+            finally:
+                free(<void *>ulist)
+
     property description:
         def __get__(self):
             cdef defs.ifreq ifr
@@ -942,7 +972,6 @@ cdef class NetworkInterface(object):
             ifr.ifr_ifru.ifru_data = <defs.caddr_t>&carpr
 
             for v in value:
-
                 memset(&carpr, 0, cython.sizeof(carpr))
                 carpr.carpr_count = 1
 
@@ -955,7 +984,6 @@ cdef class NetworkInterface(object):
                     strcpy(<char *>carpr.carpr_key, v.key)
                 if v.state is not None:
                     carpr.carpr_state = v.state.value
-
 
                 if self.ioctl(defs.SIOCSVH, <void*>&ifr) == -1:
                     raise OSError(errno, os.strerror(errno))
