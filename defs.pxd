@@ -429,6 +429,11 @@ cdef extern from "net/if_media.h":
         int ifmt_word
         const char *ifmt_string
 
+    cdef int IFM_TYPE(int type)
+
+    enum:
+        IFM_IMASK
+
     enum:
         IFM_SUBTYPE_ETHERNET_DESCRIPTIONS
 

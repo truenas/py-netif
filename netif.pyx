@@ -824,11 +824,11 @@ cdef class NetworkInterface(object):
                 raise OSError(errno, os.strerror(errno))
 
             ttos = get_toptype_ttos(ifm.ifm_current)
-            ifmt = get_subtype_by_name(value, ttos)
+            ifmt = get_subtype_by_name(value.encode('ascii'), ttos)
 
             memset(&ifr, 0, cython.sizeof(ifr))
             strcpy(ifr.ifr_name, self.nameb)
-            ifr.ifr_ifru.ifru_media = ifmt.ifmt_word
+            ifr.ifr_ifru.ifru_media = (ifm.ifm_current & defs.IFM_IMASK) | defs.IFM_TYPE(ifm.ifm_current) | ifmt.ifmt_word
             if self.ioctl(defs.SIOCSIFMEDIA, <void*>&ifr) == -1:
                 raise OSError(errno, os.strerror(errno))
 
