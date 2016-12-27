@@ -664,6 +664,7 @@ cdef class NetworkInterface(object):
             'media_subtype': self.media_subtype,
             'active_media_type': self.active_media_type,
             'active_media_subtype': self.active_media_subtype,
+            'supported_media': list(set(self.supported_media)),
             'media_options': [i.name for i in self.media_options] if self.media_options is not None else None,
             'link_address': self.link_address.address.address,
             'aliases': [i.__getstate__() for i in self.addresses]
