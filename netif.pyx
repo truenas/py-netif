@@ -1305,27 +1305,6 @@ cdef class RoutingPacket(object):
                 sdl = <defs.sockaddr_dl*>sa
                 result[i] = self._parse_sockaddr_dl(sdl)
 
-            elif sa.sa_family in (0x00, 0xff) and i == defs.RTAX_NETMASK:
-                # Hack for getting netmask information when parsing route messages
-                # obtained via sysctl(3). I don't know why netmask sockaddrs are malformed.
-                if sa.sa_len == 0:
-                    # default route
-                    if addr_sa_family == defs.AF_INET:
-                        result[i] = ipaddress.ip_address(u'0.0.0.0')
-
-                    if addr_sa_family == defs.AF_INET6:
-                        result[i] = ipaddress.ip_address(u'::')
-
-                else:
-                    if addr_sa_family == defs.AF_INET:
-                        result[i] = ipaddress.ip_address(sa.sa_data[2:6])
-
-                    if addr_sa_family == defs.AF_INET6:
-                        sin6 = <defs.sockaddr_in6*>sa
-                        memset(netmask, 0, sizeof(netmask))
-                        memcpy(netmask, sin6.sin6_addr.s6_addr, min(16, sa.sa_len - 8))
-                        result[i] = ipaddress.ip_address(netmask[:16])
-
         return result
 
     cdef _pack_sockaddrs(self, int start_offset, addrs):
@@ -1338,7 +1317,7 @@ cdef class RoutingPacket(object):
         mask = 0
         ptr = start_offset
 
-        for rtax, i in addrs.items():
+        for rtax, i in sorted(addrs.items()):
             if not i:
                 continue
 
