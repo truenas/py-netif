@@ -686,7 +686,8 @@ cdef class NetworkInterface(object):
         strcpy(nd.ifname, self.nameb)
 
         if self.ioctl(defs.SIOCGIFINFO_IN6, <void*>&nd, af=AddressFamily.INET6) == -1:
-            raise OSError(errno, os.strerror(errno))
+            if errno != ENXIO:
+                raise OSError(errno, os.strerror(errno))
 
         if value is None:
             return nd.ndi.flags
