@@ -1366,6 +1366,17 @@ cdef class RoutingPacket(object):
         def __set__(self, value):
             self.rt_msg.rtm_type = value
 
+    property pid:
+        def __get__(self):
+            return self.rt_msg.rtm_pid
+
+    property seqno:
+        def __get__(self):
+            return self.rt_msg.rtm_seq
+
+        def __set__(self, value):
+            self.rt_msg.rtm_seq = value
+
     property version:
         def __get__(self):
             return self.rt_msg.rtm_version
@@ -1686,7 +1697,7 @@ class Route(object):
 
 class RoutingTable(object):
     def __init__(self):
-        pass
+        self.seqno = 0
 
     def __send_message(self, msg):
         if msg.type == RoutingMessageType.DELETE:
@@ -1696,6 +1707,19 @@ class RoutingTable(object):
         sock.open()
         sock.write_message(msg)
         sock.close()
+
+    def __send_and_receive_message(self, msg):
+        sock = RoutingSocket()
+        sock.open()
+        sock.write_message(msg)
+
+        while True:
+            ret = sock.read_message()
+            if isinstance(ret, RoutingMessage) and ret.seqno == msg.seqno and ret.pid == os.getpid():
+                break
+
+        sock.close()
+        return msg
 
     def __send_route(self, type, route):
         msg = RoutingMessage()
@@ -1746,6 +1770,15 @@ class RoutingTable(object):
 
     def change(self, route):
         self.__send_route(RoutingMessageType.CHANGE, route)
+
+    def get(self, address):
+        msg = RoutingMessage()
+        msg.type = RoutingMessageType.GET
+        msg.seqno = self.seqno
+        msg.network = address
+        ret = self.__send_and_receive_message(msg)
+        self.seqno += 1
+        return ret
 
 
 class RoutingSocket(object):
@@ -1849,8 +1882,7 @@ cdef list_interfaces_internal(names, typemap, defs.ifaddrs* ifa):
         typemap = {}
         typemap.update(dict((i, VlanInterface) for i in get_ifgroup('vlan')))
         typemap.update(dict((i, LaggInterface) for i in get_ifgroup('lagg')))
-        typemap.update(dict((i, BridgeInterface)
-                            for i in get_ifgroup('bridge')))
+        typemap.update(dict((i, BridgeInterface) for i in get_ifgroup('bridge')))
 
     result = {}
     while ifa:
