@@ -1719,7 +1719,7 @@ class RoutingTable(object):
                 break
 
         sock.close()
-        return msg
+        return ret
 
     def __send_route(self, type, route):
         msg = RoutingMessage()
