@@ -124,6 +124,8 @@ cdef extern from "sys/socket.h":
         NET_RT_IFMALIST
         NET_RT_IFLISTL
 
+    int setfib(int fib)
+
 
 cdef extern from "netinet/in.h":
     ctypedef struct in_addr_t:
