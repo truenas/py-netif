@@ -2104,3 +2104,9 @@ def set_domainname(newdomainname):
     newdomainname = newdomainname.encode('ascii')
     if defs.setdomainname(newdomainname, len(newdomainname)) != 0:
         raise OSError(errno, os.strerror(errno))
+
+
+def setfib(fib):
+    err = setfib(fib)
+    if err != 0:
+        raise OSError(errno, os.strerror(errno))
