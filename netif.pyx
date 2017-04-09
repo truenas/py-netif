@@ -2107,6 +2107,6 @@ def set_domainname(newdomainname):
 
 
 def setfib(fib):
-    err = setfib(fib)
+    err = defs.setfib(fib)
     if err != 0:
         raise OSError(errno, os.strerror(errno))
