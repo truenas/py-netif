@@ -1176,7 +1176,8 @@ cdef class VlanInterface(NetworkInterface):
         state = super(VlanInterface, self).__getstate__()
         state.update({
             'parent': self.parent,
-            'tag': self.tag
+            'tag': self.tag,
+            'pcp': self.pcp,
         })
 
         return state
@@ -1192,9 +1193,12 @@ cdef class VlanInterface(NetworkInterface):
         if self.ioctl(defs.SIOCGETVLAN, <void*>&ifr) == -1:
             raise OSError(errno, os.strerror(errno))
 
-        return vlr.vlr_parent.decode('ascii'), vlr.vlr_tag
+        if self.ioctl(defs.SIOCGVLANPCP, <void*>&ifr) == -1:
+            raise OSError(errno, os.strerror(errno))
 
-    def configure(self, parent, tag):
+        return vlr.vlr_parent.decode('ascii'), vlr.vlr_tag, ifr.ifr_ifru.ifru_vlan_pcp
+
+    def configure(self, parent, tag, pcp=None):
         cdef defs.ifreq ifr
         cdef defs.vlanreq vlr
 
@@ -1206,6 +1210,11 @@ cdef class VlanInterface(NetworkInterface):
 
         if self.ioctl(defs.SIOCSETVLAN, <void*>&ifr) == -1:
             raise OSError(errno, os.strerror(errno))
+
+        if pcp is not None:
+            ifr.ifr_ifru.ifru_vlan_pcp = pcp
+            if self.ioctl(defs.SIOCSVLANPCP, <void*>&ifr) == -1:
+                raise OSError(errno, os.strerror(errno))
 
     def unconfigure(self):
         cdef defs.ifreq ifr
@@ -1227,6 +1236,10 @@ cdef class VlanInterface(NetworkInterface):
     property tag:
         def __get__(self):
             return self.get_vlan()[1] or None
+
+    property pcp:
+        def __get__(self):
+            return self.get_vlan()[2] or None
 
 
 cdef class RoutingPacket(object):

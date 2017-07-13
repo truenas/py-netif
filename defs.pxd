@@ -189,6 +189,8 @@ cdef extern from "net/if.h":
         int  ifru_media
         caddr_t  ifru_data
         int ifru_cap[2]
+        uint8_t ifru_fib
+        u_char ifru_vlan_pcp
 
     cdef struct ifreq:
         char ifr_name[IFNAMSIZ]
@@ -788,6 +790,8 @@ cdef extern from "net/if_vlan_var.h":
     enum:
         SIOCSETVLAN
         SIOCGETVLAN
+        SIOCGVLANPCP
+        SIOCSVLANPCP
 
     cdef struct vlanreq:
         char vlr_parent[IFNAMSIZ]
