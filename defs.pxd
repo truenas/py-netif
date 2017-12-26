@@ -748,31 +748,58 @@ cdef extern from "net/if.h":
         IFF_DYING
         IFF_RENAMING
 
-    enum:
-        IFCAP_RXCSUM
-        IFCAP_TXCSUM
-        IFCAP_NETCONS
-        IFCAP_VLAN_MTU
-        IFCAP_VLAN_HWTAGGING
-        IFCAP_JUMBO_MTU
-        IFCAP_POLLING
-        IFCAP_VLAN_HWCSUM
-        IFCAP_TSO4
-        IFCAP_TSO6
-        IFCAP_LRO
-        IFCAP_WOL_UCAST
-        IFCAP_WOL_MCAST
-        IFCAP_WOL_MAGIC
-        IFCAP_TOE4
-        IFCAP_TOE6
-        IFCAP_VLAN_HWFILTER
-        IFCAP_POLLING_NOCOUNT
-        IFCAP_VLAN_HWTSO
-        IFCAP_LINKSTATE
-        IFCAP_NETMAP
-        IFCAP_RXCSUM_IPV6
-        IFCAP_TXCSUM_IPV6
-        IFCAP_HWSTATS
+    IF FREEBSD_VERSION >= 1200054:
+        enum:
+            IFCAP_RXCSUM
+            IFCAP_TXCSUM
+            IFCAP_NETCONS
+            IFCAP_VLAN_MTU
+            IFCAP_VLAN_HWTAGGING
+            IFCAP_JUMBO_MTU
+            IFCAP_POLLING
+            IFCAP_VLAN_HWCSUM
+            IFCAP_TSO4
+            IFCAP_TSO6
+            IFCAP_LRO
+            IFCAP_WOL_UCAST
+            IFCAP_WOL_MCAST
+            IFCAP_WOL_MAGIC
+            IFCAP_TOE4
+            IFCAP_TOE6
+            IFCAP_VLAN_HWFILTER
+            IFCAP_VLAN_HWTSO
+            IFCAP_LINKSTATE
+            IFCAP_NETMAP
+            IFCAP_RXCSUM_IPV6
+            IFCAP_TXCSUM_IPV6
+            IFCAP_HWSTATS
+
+    ELSE:
+        enum:
+            IFCAP_RXCSUM
+            IFCAP_TXCSUM
+            IFCAP_NETCONS
+            IFCAP_VLAN_MTU
+            IFCAP_VLAN_HWTAGGING
+            IFCAP_JUMBO_MTU
+            IFCAP_POLLING
+            IFCAP_VLAN_HWCSUM
+            IFCAP_TSO4
+            IFCAP_TSO6
+            IFCAP_LRO
+            IFCAP_WOL_UCAST
+            IFCAP_WOL_MCAST
+            IFCAP_WOL_MAGIC
+            IFCAP_TOE4
+            IFCAP_TOE6
+            IFCAP_VLAN_HWFILTER
+            IFCAP_POLLING_NOCOUNT
+            IFCAP_VLAN_HWTSO
+            IFCAP_LINKSTATE
+            IFCAP_NETMAP
+            IFCAP_RXCSUM_IPV6
+            IFCAP_TXCSUM_IPV6
+            IFCAP_HWSTATS
 
     cdef struct ifdrv:
         char ifd_name[IFNAMSIZ]
