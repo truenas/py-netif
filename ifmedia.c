@@ -108,7 +108,7 @@ static struct ifmedia_description ifm_shared_option_aliases[] =
     IFM_SHARED_OPTION_ALIASES;
 
 /* must be in the same order as IFM_TYPE_DESCRIPTIONS */
-#ifdef HAVE_IFMEDIA_TYPES_TO_SUBTYPES
+#ifndef HAVE_IFM_SUBTYPE_TOKENRING_DESCRIPTIONS
 static struct ifmedia_type_to_subtype ifmedia_types_to_subtypes[] = {
 	{
 		{

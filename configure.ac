@@ -82,19 +82,6 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
 )
 
 
-dnl Checking ifmedia_types_to_subtypes existence
-
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
-		[#include <ifmedia.c>],
-		[
-			size_t n = sizeof(ifmedia_types_to_subtypes) /* ; */
-		]
-	)],
-	[AC_DEFINE(HAVE_IFMEDIA_TYPES_TO_SUBTYPES) AC_MSG_NOTICE([OK])],
-	[AC_MSG_NOTICE([Not found])]
-)
-
-
 SECTION_TITLE([GENERATING CONFIG FILES])
 AC_CONFIG_FILES([config.pxi])
 AC_CONFIG_HEADERS([config.h])
