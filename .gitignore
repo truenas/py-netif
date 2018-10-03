@@ -1,4 +1,8 @@
 autom4te.cache/
+build/
+config.h
 config.log
 config.pxi
 config.status
+netif.c
+*.html

@@ -21,6 +21,7 @@ dnl Setting appropriate CFLAGS
 
 CFLAGS="
 -I${freebsd_src}/sys/ 
+-I${freebsd_src}/sbin/ifconfig/ 
 ${CFLAGS}"
 
 
@@ -62,10 +63,41 @@ AX_CHECK_DEFINE(
 )
 
 
-SECTION_TITLE([GENERATING CONFIG FILE])
-AC_CONFIG_FILES([config.pxi])
+SECTION_TITLE([RUNNING TESTS ON ifmedia.c])
 
+
+AC_CHECK_HEADERS([ifmedia.c], [], [AC_ERROR([A working ifmedia.c is required])])
+
+
+dnl Checking ifm_subtype_ethernet_descriptions existence
+
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+		[#include <ifmedia.c>],
+		[
+			size_t n = sizeof(ifm_subtype_tokenring_descriptions) /* ; */
+		]
+	)],
+	[AC_DEFINE(HAVE_IFM_SUBTYPE_TOKENRING_DESCRIPTIONS) AC_MSG_NOTICE([OK])],
+	[AC_MSG_NOTICE([Not found])]
+)
+
+
+dnl Checking ifmedia_types_to_subtypes existence
+
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+		[#include <ifmedia.c>],
+		[
+			size_t n = sizeof(ifmedia_types_to_subtypes) /* ; */
+		]
+	)],
+	[AC_DEFINE(HAVE_IFMEDIA_TYPES_TO_SUBTYPES) AC_MSG_NOTICE([OK])],
+	[AC_MSG_NOTICE([Not found])]
+)
+
+
+SECTION_TITLE([GENERATING CONFIG FILES])
+AC_CONFIG_FILES([config.pxi])
+AC_CONFIG_HEADERS([config.h])
 
 dnl Process Makefile.in to create Makefile
 AC_OUTPUT(Makefile)
-

@@ -36,6 +36,8 @@
 #include <net/if_media.h>
 #include "ifmedia.h"
 
+#include "config.h"
+
 
 static struct ifmedia_description ifm_type_descriptions[] =
     IFM_TYPE_DESCRIPTIONS;
@@ -49,7 +51,7 @@ static struct ifmedia_description ifm_subtype_ethernet_aliases[] =
 static struct ifmedia_description ifm_subtype_ethernet_option_descriptions[] =
     IFM_SUBTYPE_ETHERNET_OPTION_DESCRIPTIONS;
 
-#if FREEBSD_VERSION <= 1200062
+#ifdef HAVE_IFM_SUBTYPE_TOKENRING_DESCRIPTIONS
 static struct ifmedia_description ifm_subtype_tokenring_descriptions[] =
     IFM_SUBTYPE_TOKENRING_DESCRIPTIONS;
 
@@ -106,7 +108,7 @@ static struct ifmedia_description ifm_shared_option_aliases[] =
     IFM_SHARED_OPTION_ALIASES;
 
 /* must be in the same order as IFM_TYPE_DESCRIPTIONS */
-#if FREEBSD_VERSION > 1200062
+#ifdef HAVE_IFMEDIA_TYPES_TO_SUBTYPES
 static struct ifmedia_type_to_subtype ifmedia_types_to_subtypes[] = {
 	{
 		{
