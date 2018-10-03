@@ -25,6 +25,8 @@
 #
 #####################################################################
 
+include "config.pxi"
+
 
 import array
 import os
@@ -404,7 +406,7 @@ class InterfaceCapability(enum.IntEnum):
     TOE4 = defs.IFCAP_TOE4
     TOE6 = defs.IFCAP_TOE6
     VLAN_HWFILTER = defs.IFCAP_VLAN_HWFILTER
-    IF FREEBSD_VERSION < 1200054:
+    IF HAVE_IFCAP_POLLING_NOCOUNT:
         POLLING_NOCOUNT = defs.IFCAP_POLLING_NOCOUNT
     VLAN_HWTSO = defs.IFCAP_VLAN_HWTSO
     LINKSTATE = defs.IFCAP_LINKSTATE
@@ -425,7 +427,7 @@ class AggregationProtocol(enum.IntEnum):
     FAILOVER = defs.LAGG_PROTO_FAILOVER
     LOADBALANCE = defs.LAGG_PROTO_LOADBALANCE
     LACP = defs.LAGG_PROTO_LACP
-    IF FREEBSD_VERSION < 1100079:
+    IF HAVE_LAGG_PROTO_ETHERCHANNEL:
         ETHERCHANNEL = defs.LAGG_PROTO_ETHERCHANNEL
 
 
