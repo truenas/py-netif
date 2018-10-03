@@ -71,6 +71,8 @@ AC_CHECK_HEADERS([ifmedia.c], [], [AC_ERROR([A working ifmedia.c is required])])
 
 dnl Checking ifm_subtype_ethernet_descriptions existence
 
+AC_MSG_NOTICE([Checking ifm_subtype_ethernet_descriptions existence])
+
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
 		[#include <ifmedia.c>],
 		[

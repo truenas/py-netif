@@ -3466,6 +3466,9 @@ done
 
 
 
+{ $as_echo "$as_me:${as_lineno-$LINENO}: Checking ifm_subtype_ethernet_descriptions existence" >&5
+$as_echo "$as_me: Checking ifm_subtype_ethernet_descriptions existence" >&6;}
+
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <ifmedia.c>
