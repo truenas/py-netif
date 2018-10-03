@@ -26,16 +26,18 @@
 
 import Cython.Compiler.Options
 Cython.Compiler.Options.annotate = True
-import subprocess
+
 from distutils.core import setup
 from Cython.Distutils.extension import Extension
 from Cython.Distutils import build_ext
 
-freebsd_version = int(subprocess.check_output("uname -K", shell=True).strip())
 
 extensions = [
-    Extension("netif", ["netif.pyx", "ifmedia.c"], extra_compile_args=["-g"],
-    cython_compile_time_env={'FREEBSD_VERSION': freebsd_version})
+    Extension(
+        "netif",
+        ["netif.pyx", "ifmedia.c"],
+        extra_compile_args=["-g"],
+    )
 ]
 
 setup(
