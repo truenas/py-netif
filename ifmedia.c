@@ -62,6 +62,7 @@ static struct ifmedia_description ifm_subtype_tokenring_option_descriptions[] =
     IFM_SUBTYPE_TOKENRING_OPTION_DESCRIPTIONS;
 #endif
 
+#ifdef HAVE_IFM_SUBTYPE_FDDI_DESCRIPTIONS
 static struct ifmedia_description ifm_subtype_fddi_descriptions[] =
     IFM_SUBTYPE_FDDI_DESCRIPTIONS;
 
@@ -70,6 +71,7 @@ static struct ifmedia_description ifm_subtype_fddi_aliases[] =
 
 static struct ifmedia_description ifm_subtype_fddi_option_descriptions[] =
     IFM_SUBTYPE_FDDI_OPTION_DESCRIPTIONS;
+#endif
 
 static struct ifmedia_description ifm_subtype_ieee80211_descriptions[] =
     IFM_SUBTYPE_IEEE80211_DESCRIPTIONS;

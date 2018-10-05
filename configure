@@ -3477,9 +3477,8 @@ done
 
 
 
-
-{ $as_echo "$as_me:${as_lineno-$LINENO}: Checking ifm_subtype_ethernet_descriptions existence" >&5
-$as_echo "$as_me: Checking ifm_subtype_ethernet_descriptions existence" >&6;}
+{ $as_echo "$as_me:${as_lineno-$LINENO}: Checking ifm_subtype_tokenring_descriptions existence" >&5
+$as_echo "$as_me: Checking ifm_subtype_tokenring_descriptions existence" >&6;}
 
 cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
@@ -3496,7 +3495,45 @@ main ()
 }
 _ACEOF
 if ac_fn_c_try_compile "$LINENO"; then :
-  $as_echo "#define HAVE_IFM_SUBTYPE_TOKENRING_DESCRIPTIONS 1" >>confdefs.h
+
+$as_echo "#define HAVE_IFM_SUBTYPE_TOKENRING_DESCRIPTIONS 1" >>confdefs.h
+ { $as_echo "$as_me:${as_lineno-$LINENO}: OK" >&5
+$as_echo "$as_me: OK" >&6;}
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: Not found" >&5
+$as_echo "$as_me: Not found" >&6;}
+
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+
+
+{ $as_echo "$as_me:${as_lineno-$LINENO}: Checking IFM_SUBTYPE_FDDI_DESCRIPTIONS existence" >&5
+$as_echo "$as_me: Checking IFM_SUBTYPE_FDDI_DESCRIPTIONS existence" >&6;}
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+#include <sys/types.h>
+#include <net/if_media.h>
+
+int
+main ()
+{
+
+#ifdef IFM_SUBTYPE_FDDI_DESCRIPTIONS
+int ok;
+(void)ok;
+#else
+choke me
+#endif
+
+
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+
+$as_echo "#define HAVE_IFM_SUBTYPE_FDDI_DESCRIPTIONS 1" >>confdefs.h
  { $as_echo "$as_me:${as_lineno-$LINENO}: OK" >&5
 $as_echo "$as_me: OK" >&6;}
 else

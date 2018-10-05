@@ -102,9 +102,8 @@ SECTION_TITLE([RUNNING TESTS ON ifmedia.c])
 AC_CHECK_HEADERS([ifmedia.c], [], [AC_ERROR([A working ifmedia.c is required])])
 
 
-dnl Checking ifm_subtype_ethernet_descriptions existence
-
-AC_MSG_NOTICE([Checking ifm_subtype_ethernet_descriptions existence])
+dnl Checking ifm_subtype_tokenring_descriptions existence
+AC_MSG_NOTICE([Checking ifm_subtype_tokenring_descriptions existence])
 
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
 		[#include <ifmedia.c>],
@@ -112,7 +111,28 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
 			size_t n = sizeof(ifm_subtype_tokenring_descriptions) /* ; */
 		]
 	)],
-	[AC_DEFINE(HAVE_IFM_SUBTYPE_TOKENRING_DESCRIPTIONS) AC_MSG_NOTICE([OK])],
+	[AC_DEFINE(HAVE_IFM_SUBTYPE_TOKENRING_DESCRIPTIONS, 1, [FreeBSD with Token Ring support]) AC_MSG_NOTICE([OK])],
+	[AC_MSG_NOTICE([Not found])]
+)
+
+
+dnl Checking ifm_subtype_fddi_descriptions existence
+AC_MSG_NOTICE([Checking IFM_SUBTYPE_FDDI_DESCRIPTIONS existence])
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+		[
+#include <sys/types.h>
+#include <net/if_media.h>
+],
+		[
+#ifdef IFM_SUBTYPE_FDDI_DESCRIPTIONS
+int ok;
+(void)ok;
+#else
+choke me
+#endif
+		]
+	)],
+	[AC_DEFINE(HAVE_IFM_SUBTYPE_FDDI_DESCRIPTIONS, 1, [FreeBSD with FDDI support]) AC_MSG_NOTICE([OK])],
 	[AC_MSG_NOTICE([Not found])]
 )
 
