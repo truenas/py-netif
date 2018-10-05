@@ -110,81 +110,6 @@ static struct ifmedia_description ifm_shared_option_aliases[] =
     IFM_SHARED_OPTION_ALIASES;
 
 /* must be in the same order as IFM_TYPE_DESCRIPTIONS */
-#ifndef HAVE_IFM_SUBTYPE_TOKENRING_DESCRIPTIONS
-static struct ifmedia_type_to_subtype ifmedia_types_to_subtypes[] = {
-	{
-		{
-			{ &ifm_subtype_shared_descriptions[0], 0 },
-			{ &ifm_subtype_shared_aliases[0], 1 },
-			{ NULL, 0 },
-		},
-		{
-			{ &ifm_shared_option_descriptions[0], 0 },
-			{ &ifm_shared_option_aliases[0], 1 },
-			{ NULL, 0 },
-		},
-		{
-			{ NULL, 0 },
-		},
-	},
-	{
-		{
-			{ &ifm_subtype_shared_descriptions[0], 0 },
-			{ &ifm_subtype_shared_aliases[0], 1 },
-			{ &ifm_subtype_fddi_descriptions[0], 0 },
-			{ &ifm_subtype_fddi_aliases[0], 1 },
-			{ NULL, 0 },
-		},
-		{
-			{ &ifm_shared_option_descriptions[0], 0 },
-			{ &ifm_shared_option_aliases[0], 1 },
-			{ &ifm_subtype_fddi_option_descriptions[0], 0 },
-			{ NULL, 0 },
-		},
-		{
-			{ NULL, 0 },
-		},
-	},
-	{
-		{
-			{ &ifm_subtype_shared_descriptions[0], 0 },
-			{ &ifm_subtype_shared_aliases[0], 1 },
-			{ &ifm_subtype_ieee80211_descriptions[0], 0 },
-			{ &ifm_subtype_ieee80211_aliases[0], 1 },
-			{ NULL, 0 },
-		},
-		{
-			{ &ifm_shared_option_descriptions[0], 0 },
-			{ &ifm_shared_option_aliases[0], 1 },
-			{ &ifm_subtype_ieee80211_option_descriptions[0], 0 },
-			{ NULL, 0 },
-		},
-		{
-			{ &ifm_subtype_ieee80211_mode_descriptions[0], 0 },
-			{ &ifm_subtype_ieee80211_mode_aliases[0], 0 },
-			{ NULL, 0 },
-		},
-	},
-	{
-		{
-			{ &ifm_subtype_shared_descriptions[0], 0 },
-			{ &ifm_subtype_shared_aliases[0], 1 },
-			{ &ifm_subtype_atm_descriptions[0], 0 },
-			{ &ifm_subtype_atm_aliases[0], 1 },
-			{ NULL, 0 },
-		},
-		{
-			{ &ifm_shared_option_descriptions[0], 0 },
-			{ &ifm_shared_option_aliases[0], 1 },
-			{ &ifm_subtype_atm_option_descriptions[0], 0 },
-			{ NULL, 0 },
-		},
-		{
-			{ NULL, 0 },
-		},
-	},
-};
-# else
 static struct ifmedia_type_to_subtype ifmedia_types_to_subtypes[] = {
 	{
 		{
@@ -204,6 +129,7 @@ static struct ifmedia_type_to_subtype ifmedia_types_to_subtypes[] = {
 			{ NULL, 0 },
 		},
 	},
+#ifdef HAVE_IFM_SUBTYPE_TOKENRING_DESCRIPTIONS
 	{
 		{
 			{ &ifm_subtype_shared_descriptions[0], 0 },
@@ -222,6 +148,8 @@ static struct ifmedia_type_to_subtype ifmedia_types_to_subtypes[] = {
 			{ NULL, 0 },
 		},
 	},
+#endif
+#ifdef HAVE_IFM_SUBTYPE_FDDI_DESCRIPTIONS
 	{
 		{
 			{ &ifm_subtype_shared_descriptions[0], 0 },
@@ -240,6 +168,7 @@ static struct ifmedia_type_to_subtype ifmedia_types_to_subtypes[] = {
 			{ NULL, 0 },
 		},
 	},
+#endif
 	{
 		{
 			{ &ifm_subtype_shared_descriptions[0], 0 },
@@ -279,7 +208,6 @@ static struct ifmedia_type_to_subtype ifmedia_types_to_subtypes[] = {
 		},
 	},
 };
-#endif
 
 struct ifmedia_description *get_toptype_desc(int ifmw)
 {
