@@ -438,7 +438,8 @@ class LaggPortFlags(enum.IntEnum):
     ACTIVE = defs.LAGG_PORT_ACTIVE
     COLLECTING = defs.LAGG_PORT_COLLECTING
     DISTRIBUTING = defs.LAGG_PORT_DISTRIBUTING
-    DISABLED = defs.LAGG_PORT_DISABLED
+    IF HAVE_LAGG_PORT_DISABLED:
+        DISABLED = defs.LAGG_PORT_DISABLED
 
 
 class NeighborDiscoveryFlags(enum.IntEnum):

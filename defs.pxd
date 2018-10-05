@@ -623,14 +623,23 @@ cdef extern from "net/if_lagg.h":
         SIOCGLAGGFLAGS
         SIOCSLAGGHASH
 
-    enum:
-        LAGG_PORT_SLAVE
-        LAGG_PORT_MASTER
-        LAGG_PORT_STACK
-        LAGG_PORT_ACTIVE
-        LAGG_PORT_COLLECTING
-        LAGG_PORT_DISTRIBUTING
-        LAGG_PORT_DISABLED
+    IF HAVE_LAGG_PORT_DISABLED:
+        enum:
+            LAGG_PORT_SLAVE
+            LAGG_PORT_MASTER
+            LAGG_PORT_STACK
+            LAGG_PORT_ACTIVE
+            LAGG_PORT_COLLECTING
+            LAGG_PORT_DISTRIBUTING
+            LAGG_PORT_DISABLED
+    ELSE:
+        enum:
+            LAGG_PORT_SLAVE
+            LAGG_PORT_MASTER
+            LAGG_PORT_STACK
+            LAGG_PORT_ACTIVE
+            LAGG_PORT_COLLECTING
+            LAGG_PORT_DISTRIBUTING
 
     enum:
         LAGG_PROTO_NONE

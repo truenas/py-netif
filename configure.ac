@@ -19,13 +19,10 @@ freebsd_src=${FREEBSD_SRC:=/usr/src}
 dnl Setting appropriate CFLAGS
 
 
-CFLAGS="
+CFLAGS="-nostdinc
 -I${freebsd_src}/sys/ 
 -I${freebsd_src}/sbin/ifconfig/ 
-${CFLAGS}"
-
-
-AC_DEFINE(_NET_LAGG_H)
+${CFLAGS} -I/usr/include"
 
 
 SECTION_TITLE([RUNNING TESTS ON if_lagg HEADER])
@@ -35,15 +32,51 @@ AC_CHECK_HEADERS([sys/sysctl.h], [], [AC_ERROR([A working sys/sysctl header is r
 AC_CHECK_HEADERS([net/if_lagg.h], [], [AC_ERROR([A working if_lagg header is required])],[
 	#include <sys/types.h>
 	#include <sys/sysctl.h>
+	#include <net/ethernet.h>
+	#include <net/if.h>
 ])
 
 
 dnl Checking for LAGG_PROTO_ETHERCHANNEL define
-
-AX_CHECK_DEFINE(
-	[net/if_lagg.h], [LAGG_PROTO_ETHERCHANNEL],
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+		[
+#include <sys/types.h>
+#include <net/if.h>
+#include <net/ethernet.h>
+#include <net/if_lagg.h>
+],
+		[
+#ifdef LAGG_PROTO_ETHERCHANNEL
+int ok;
+(void)ok;
+#else
+choke me
+#endif
+		]
+	)],
 	[AC_SUBST(HAVE_LAGG_PROTO_ETHERCHANNEL, 1)],
 	[AC_SUBST(HAVE_LAGG_PROTO_ETHERCHANNEL, 0)]
+)
+
+dnl Checking for LAGG_PORT_DISABLED define
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
+		[
+#include <sys/types.h>
+#include <net/if.h>
+#include <net/ethernet.h>
+#include <net/if_lagg.h>
+],
+		[
+#ifdef LAGG_PORT_DISABLED
+int ok;
+(void)ok;
+#else
+choke me
+#endif
+		]
+	)],
+	[AC_SUBST(HAVE_LAGG_PORT_DISABLED, 1)],
+	[AC_SUBST(HAVE_LAGG_PORT_DISABLED, 0)]
 )
 
 SECTION_TITLE([RUNNING TESTS ON if HEADER])
