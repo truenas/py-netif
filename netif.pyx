@@ -471,7 +471,7 @@ class CarpState(enum.IntEnum):
 
 
 class BridgeMemberFlags(enum.IntEnum):
-    LEARN = defs.IFBIF_LEARNING
+    LEARNING = defs.IFBIF_LEARNING
     DISCOVER = defs.IFBIF_DISCOVER
     STP = defs.IFBIF_STP
     STICKY = defs.IFBIF_STICKY
