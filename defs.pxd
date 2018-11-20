@@ -715,6 +715,16 @@ cdef extern from "net/if_bridgevar.h":
         BRDGSPROTO
         BRDGSTXHC
         BRDGSIFAMAX
+        IFBIF_LEARNING
+        IFBIF_DISCOVER
+        IFBIF_STP
+        IFBIF_STICKY
+        IFBIF_BSTP_EDGE
+        IFBIF_BSTP_AUTOEDGE
+        IFBIF_BSTP_PTP
+        IFBIF_BSTP_AUTOPTP
+        IFBIF_PRIVATE
+
 
     cdef struct ifbreq:
         char ifbr_ifsname[IFNAMSIZ];
