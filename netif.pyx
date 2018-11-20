@@ -1119,6 +1119,19 @@ cdef class LaggInterface(NetworkInterface):
 
 
 cdef class BridgeInterface(NetworkInterface):
+
+    member_flags = {
+        'learn': defs.IFBIF_LEARNING,
+        'discover': defs.IFBIF_DISCOVER,
+        'stp': defs.IFBIF_STP,
+        'sticky': defs.IFBIF_STICKY,
+        'edge': defs.IFBIF_BSTP_EDGE,
+        'autoedge': defs.IFBIF_BSTP_AUTOEDGE,
+        'ptp': defs.IFBIF_BSTP_PTP,
+        'autoptp': defs.IFBIF_BSTP_AUTOPTP,
+        'private': defs.IFBIF_PRIVATE
+    }
+
     def __getstate__(self):
         state = super(BridgeInterface, self).__getstate__()
         state.update({
@@ -1150,6 +1163,26 @@ cdef class BridgeInterface(NetworkInterface):
 
         if self.ioctl(defs.SIOCSDRVSPEC if set else defs.SIOCGDRVSPEC, <void*>&ifd) == -1:
             raise OSError(errno, os.strerror(errno))
+
+    def set_member_flag(self, member, str flag, int set):
+        if flag not in self.member_flags:
+            raise Exception(f'Specified flag {flag} does not exist')
+
+        if member not in self.members:
+            raise Exception(f'Member {member} does not exist')
+
+        cdef defs.ifbreq req;
+        strcpy(req.ifbr_ifsname, member.encode('ascii'))
+
+        # We first try to get flags for the specified member
+        self.bridge_cmd(defs.BRDGGIFFLGS, &req, cython.sizeof(req), 0)
+
+        if set:
+            req.ifbr_ifsflags |= self.member_flags[flag]
+        else:
+            req.ifbr_ifsflags &= ~self.member_flags[flag]
+
+        self.bridge_cmd(defs.BRDGSIFFLGS, &req, cython.sizeof(req), 1)
 
     property members:
         def __get__(self):
