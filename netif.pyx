@@ -470,6 +470,18 @@ class CarpState(enum.IntEnum):
     MASTER = 2
 
 
+class BridgeMemberFlags(enum.IntEnum):
+    LEARN = defs.IFBIF_LEARNING
+    DISCOVER = defs.IFBIF_DISCOVER
+    STP = defs.IFBIF_STP
+    STICKY = defs.IFBIF_STICKY
+    EDGE = defs.IFBIF_BSTP_EDGE
+    AUTOEDGE = defs.IFBIF_BSTP_AUTOEDGE
+    PTP = defs.IFBIF_BSTP_PTP
+    AUTOPTP = defs.IFBIF_BSTP_AUTOPTP
+    PRIVATE = defs.IFBIF_PRIVATE
+
+
 class LinkAddress(object):
     def __init__(self, ifname=None, address=None):
         self.ifname = ifname
@@ -1120,18 +1132,6 @@ cdef class LaggInterface(NetworkInterface):
 
 cdef class BridgeInterface(NetworkInterface):
 
-    member_flags = {
-        'learn': defs.IFBIF_LEARNING,
-        'discover': defs.IFBIF_DISCOVER,
-        'stp': defs.IFBIF_STP,
-        'sticky': defs.IFBIF_STICKY,
-        'edge': defs.IFBIF_BSTP_EDGE,
-        'autoedge': defs.IFBIF_BSTP_AUTOEDGE,
-        'ptp': defs.IFBIF_BSTP_PTP,
-        'autoptp': defs.IFBIF_BSTP_AUTOPTP,
-        'private': defs.IFBIF_PRIVATE
-    }
-
     def __getstate__(self):
         state = super(BridgeInterface, self).__getstate__()
         state.update({
@@ -1164,8 +1164,8 @@ cdef class BridgeInterface(NetworkInterface):
         if self.ioctl(defs.SIOCSDRVSPEC if set else defs.SIOCGDRVSPEC, <void*>&ifd) == -1:
             raise OSError(errno, os.strerror(errno))
 
-    def set_member_flag(self, member, str flag, int set):
-        if flag not in self.member_flags:
+    def set_member_flag(self, member, flag, int set):
+        if flag not in BridgeMemberFlags:
             raise Exception(f'Specified flag {flag} does not exist')
 
         if member not in self.members:
@@ -1178,9 +1178,9 @@ cdef class BridgeInterface(NetworkInterface):
         self.bridge_cmd(defs.BRDGGIFFLGS, &req, cython.sizeof(req), 0)
 
         if set:
-            req.ifbr_ifsflags |= self.member_flags[flag]
+            req.ifbr_ifsflags |= flag
         else:
-            req.ifbr_ifsflags &= ~self.member_flags[flag]
+            req.ifbr_ifsflags &= ~flag
 
         self.bridge_cmd(defs.BRDGSIFFLGS, &req, cython.sizeof(req), 1)
 
