@@ -667,6 +667,10 @@ cdef class NetworkInterface(object):
             raise NotImplementedError()
 
     def __getstate__(self):
+        try:
+            carp_config = [i.__getstate__() for i in self.carp_config]
+        except Exception:
+            carp_config = None
         return {
             'name': self.name,
             'description': self.description,
@@ -683,7 +687,8 @@ cdef class NetworkInterface(object):
             'supported_media': list(set(self.supported_media)),
             'media_options': [i.name for i in self.media_options] if self.media_options is not None else None,
             'link_address': self.link_address.address.address,
-            'aliases': [i.__getstate__() for i in self.addresses]
+            'aliases': [i.__getstate__() for i in self.addresses],
+            'carp_config': carp_config,
         }
 
     cdef uint32_t __get_flags(self) except? -1:
@@ -1067,6 +1072,14 @@ class CarpConfig(object):
         self.advskew = advskew
         self.key = key
         self.state = CarpState(state) if state is not None else None
+
+    def __getstate__(self):
+        return {
+            'vhid': self.vhid,
+            'address': str(self.address) if self.address else None,
+            'advbase': self.advbase,
+            'state': self.state.name if self.state else None,
+        }
 
 
 cdef class LaggInterface(NetworkInterface):
