@@ -1076,7 +1076,7 @@ class CarpConfig(object):
     def __getstate__(self):
         return {
             'vhid': self.vhid,
-            'address': str(self.address) if self.address else None,
+            'address': str(self.addr) if self.addr else None,
             'advbase': self.advbase,
             'state': self.state.name if self.state else None,
         }
