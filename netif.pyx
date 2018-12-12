@@ -42,7 +42,9 @@ from libc.string cimport strcpy, memset, memcpy
 from libc.stdlib cimport malloc, realloc, free
 
 
-CLONED_PREFIXES = ['lo', 'tun', 'tap', 'bridge', 'epair', 'carp', 'vlan', 'lagg']
+CLONED_PREFIXES = [
+    'lo', 'tun', 'tap', 'bridge', 'epair', 'carp', 'vlan', 'lagg', 'pflog', 'pfsync',
+]
 
 
 cdef extern from "ifmedia.h":
