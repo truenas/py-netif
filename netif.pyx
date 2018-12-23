@@ -34,7 +34,6 @@ import socket
 import ipaddress
 import enum
 import cython
-from bsd import sysctl
 cimport defs
 from libc.errno cimport *
 from libc.stdint cimport *
@@ -1798,6 +1797,7 @@ class RoutingTable(object):
         cdef char* buf
         cdef defs.rt_msghdr* rt_msg
 
+        from bsd import sysctl
         data = sysctl.sysctl([defs.CTL_NET, defs.AF_ROUTE, 0, 0, defs.NET_RT_DUMP, 0])
         data = array.array('b', data).tostring()
         buf = data
