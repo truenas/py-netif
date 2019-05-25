@@ -31,12 +31,7 @@ from libc.stdint cimport *
 from posix.types cimport *
 
 
-cdef extern from "net/if.h":
-    enum:
-        IFNAMSIZ
-
-
-cdef extern from "sys/sysctl.h":
+cdef extern from "sys/sysctl.h" nogil:
     enum:
         CTL_UNSPEC
         CTL_KERN
@@ -48,6 +43,10 @@ cdef extern from "sys/sysctl.h":
         CTL_MACHDEP
         CTL_USER
         CTL_P1003_1B
+
+    int sysctl(const int *, unsigned int, void *, size_t *, const void *, size_t)
+    int sysctlbyname(const char *, void *, size_t *, const void *, size_t)
+    int sysctlnametomib(const char *, int *, size_t *)
 
 cdef extern from "sys/types.h":
     ctypedef unsigned char u_char
@@ -125,6 +124,9 @@ cdef extern from "sys/socket.h":
         NET_RT_IFMALIST
         NET_RT_IFLISTL
 
+    enum:
+        PF_LINK
+
     int setfib(int fib)
 
 
@@ -165,6 +167,9 @@ cdef extern from "net/if_dl.h":
 
 cdef extern from "net/if.h":
     enum:
+        IFNAMSIZ
+
+    enum:
         LINK_STATE_UNKNOWN
         LINK_STATE_DOWN
         LINK_STATE_UP
@@ -172,6 +177,65 @@ cdef extern from "net/if.h":
     enum:
         IFAN_ARRIVAL
         IFAN_DEPARTURE
+
+    enum:
+        IFF_UP
+        IFF_BROADCAST
+        IFF_DEBUG
+        IFF_LOOPBACK
+        IFF_POINTOPOINT
+        IFF_DRV_RUNNING
+        IFF_NOARP
+        IFF_PROMISC
+        IFF_ALLMULTI
+        IFF_DRV_OACTIVE
+        IFF_SIMPLEX
+        IFF_LINK0
+        IFF_LINK1
+        IFF_LINK2
+        IFF_MULTICAST
+        IFF_CANTCONFIG
+        IFF_PPROMISC
+        IFF_MONITOR
+        IFF_STATICARP
+        IFF_DYING
+        IFF_RENAMING
+
+    enum:
+        IFCAP_RXCSUM
+        IFCAP_TXCSUM
+        IFCAP_NETCONS
+        IFCAP_VLAN_MTU
+        IFCAP_VLAN_HWTAGGING
+        IFCAP_JUMBO_MTU
+        IFCAP_POLLING
+        IFCAP_VLAN_HWCSUM
+        IFCAP_TSO4
+        IFCAP_TSO6
+        IFCAP_LRO
+        IFCAP_WOL_UCAST
+        IFCAP_WOL_MCAST
+        IFCAP_WOL_MAGIC
+        IFCAP_TOE4
+        IFCAP_TOE6
+        IFCAP_VLAN_HWFILTER
+        IFCAP_VLAN_HWTSO
+        IFCAP_LINKSTATE
+        IFCAP_NETMAP
+        IFCAP_RXCSUM_IPV6
+        IFCAP_TXCSUM_IPV6
+        IFCAP_HWSTATS
+
+    IF HAVE_IFCAP_POLLING_NOCOUNT:
+        enum:
+            IFCAP_POLLING_NOCOUNT
+
+    cdef struct ifdrv:
+        char ifd_name[IFNAMSIZ]
+        unsigned long ifd_cmd
+        size_t ifd_len
+        void* ifd_data
+
 
     cdef struct ifreq_buffer:
         size_t length
@@ -274,6 +338,23 @@ cdef extern from "net/if.h":
 
     cdef unsigned int if_nametoindex(const char* name)
     cdef char* if_indextoname(unsigned int ifindex, char *ifname)
+
+
+cdef extern from "net/if_mib.h":
+    enum:
+        IFMIB_SYSTEM
+        IFMIB_IFDATA
+
+    enum:
+        IFDATA_GENERAL
+        IFDATA_LINKSPECIFIC
+        IFDATA_DRIVERNAME
+
+    enum:
+        IFMIB_IFCOUNT
+
+    enum:
+        NETLINK_GENERIC
 
 cdef extern from "net/if_var.h":
     pass
@@ -746,67 +827,6 @@ cdef extern from "net/if_bridgevar.h":
         caddr_t ifbic_buf
         ifbreq* ifbic_req
 
-
-cdef extern from "net/if.h":
-    enum:
-        IFF_UP
-        IFF_BROADCAST
-        IFF_DEBUG
-        IFF_LOOPBACK
-        IFF_POINTOPOINT
-        IFF_DRV_RUNNING
-        IFF_NOARP
-        IFF_PROMISC
-        IFF_ALLMULTI
-        IFF_DRV_OACTIVE
-        IFF_SIMPLEX
-        IFF_LINK0
-        IFF_LINK1
-        IFF_LINK2
-        IFF_MULTICAST
-        IFF_CANTCONFIG
-        IFF_PPROMISC
-        IFF_MONITOR
-        IFF_STATICARP
-        IFF_DYING
-        IFF_RENAMING
-
-    enum:
-        IFCAP_RXCSUM
-        IFCAP_TXCSUM
-        IFCAP_NETCONS
-        IFCAP_VLAN_MTU
-        IFCAP_VLAN_HWTAGGING
-        IFCAP_JUMBO_MTU
-        IFCAP_POLLING
-        IFCAP_VLAN_HWCSUM
-        IFCAP_TSO4
-        IFCAP_TSO6
-        IFCAP_LRO
-        IFCAP_WOL_UCAST
-        IFCAP_WOL_MCAST
-        IFCAP_WOL_MAGIC
-        IFCAP_TOE4
-        IFCAP_TOE6
-        IFCAP_VLAN_HWFILTER
-        IFCAP_VLAN_HWTSO
-        IFCAP_LINKSTATE
-        IFCAP_NETMAP
-        IFCAP_RXCSUM_IPV6
-        IFCAP_TXCSUM_IPV6
-        IFCAP_HWSTATS
-
-    IF HAVE_IFCAP_POLLING_NOCOUNT:
-        enum:
-            IFCAP_POLLING_NOCOUNT
-
-
-
-    cdef struct ifdrv:
-        char ifd_name[IFNAMSIZ]
-        unsigned long ifd_cmd
-        size_t ifd_len
-        void* ifd_data
 
 cdef extern from "net/if_media.h":
     enum:
