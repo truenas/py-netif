@@ -1026,19 +1026,17 @@ cdef class NetworkInterface(object):
     property orig_name:
         def __get__(self):
             cdef:
-                char *c_orig_name
+                char c_orig_name[defs.IFNAMSIZ]
                 int name[6]
                 int rv
                 size_t oldlen = defs.IFNAMSIZ
 
-            name[0] = <int> defs.CTL_NET
-            name[1] = <int> defs.PF_LINK
-            name[2] = <int> defs.NETLINK_GENERIC
+            name[0] = defs.CTL_NET
+            name[1] = defs.PF_LINK
+            name[2] = defs.NETLINK_GENERIC
             name[3] = defs.IFMIB_IFDATA
             name[4] = self.index
             name[5] = defs.IFDATA_DRIVERNAME
-
-            c_orig_name = <char *> malloc(sizeof(char) * defs.IFNAMSIZ)
 
             with nogil:
                 rv = defs.sysctl(name, 6, c_orig_name, &oldlen, NULL, 0)
@@ -1047,7 +1045,6 @@ cdef class NetworkInterface(object):
                 raise OSError(errno, os.strerror(errno))
 
             orig_name = c_orig_name.decode()
-            free(c_orig_name)
 
             return orig_name
 
