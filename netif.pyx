@@ -721,8 +721,9 @@ cdef class NetworkInterface(object):
 
     property cloned:
         def __get__(self):
+            orig_name = self.orig_name
             for i in CLONED_PREFIXES:
-                if self.name.startswith(i):
+                if orig_name.startswith(i):
                     return True
 
             return False
