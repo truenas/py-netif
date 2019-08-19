@@ -527,6 +527,9 @@ class InterfaceAddress(object):
         self.ipv6_flags = None
         self.vhid = None
 
+        self.received_packets = self.received_errors = self.received_dropped_packets = self.received_bytes = \
+            self.sent_packets = self.sent_errors = self.sent_bytes = self.collisions = self.sent_dropped_packets = None
+
     def __str__(self):
         return u'{0}/{1}'.format(self.address, self.netmask)
 
@@ -536,7 +539,16 @@ class InterfaceAddress(object):
     def __getstate__(self):
         ret = {
             'type': self.af.name,
-            'address': self.address.address if type(self.address) is LinkAddress else str(self.address)
+            'address': self.address.address if type(self.address) is LinkAddress else str(self.address),
+            'received_packets': self.received_packets,
+            'received_errors': self.received_errors,
+            'received_dropped_packets': self.received_dropped_packets,
+            'received_bytes': self.received_bytes,
+            'sent_packets': self.sent_packets,
+            'sent_errors': self.sent_errors,
+            'sent_bytes': self.sent_bytes,
+            'collisions': self.collisions,
+            'sent_dropped_packets': self.sent_dropped_packets,
         }
 
         if self.netmask:
@@ -2004,10 +2016,6 @@ cdef list_interfaces_internal(names, typemap, defs.ifaddrs* ifa):
                 sin = <defs.sockaddr_in*>ifa.ifa_dstaddr
                 addr.dest_address = ipaddress.ip_address(socket.ntohl(sin.sin_addr.s_addr))
 
-            ifd = <defs.if_data*>ifa.ifa_data
-            if ifd.ifi_vhid != 0:
-                addr.vhid = ifd.ifi_vhid
-
         if sa.sa_family == defs.AF_INET6:
             if ifa.ifa_addr != NULL:
                 sin6 = <defs.sockaddr_in6*>ifa.ifa_addr
@@ -2037,17 +2045,28 @@ cdef list_interfaces_internal(names, typemap, defs.ifaddrs* ifa):
                 sin6 = <defs.sockaddr_in6*>ifa.ifa_dstaddr
                 addr.dest_address = ipaddress.ip_address(sin6.sin6_addr.s6_addr[:16])
 
-            ifd = <defs.if_data*>ifa.ifa_data
-            if ifd.ifi_vhid != 0:
-                addr.vhid = ifd.ifi_vhid
+        ifd = <defs.if_data*>ifa.ifa_data
+        if ifd.ifi_vhid != 0:
+            addr.vhid = ifd.ifi_vhid
 
         if sa.sa_family == defs.AF_LINK:
+            addr.received_errors = ifd.ifi_ierrors
+            addr.received_dropped_packets = ifd.ifi_iqdrops
+            addr.sent_errors = ifd.ifi_oerrors
+            addr.collisions = ifd.ifi_collisions
+            addr.sent_dropped_packets = ifd.ifi_oqdrops
+
             if ifa.ifa_addr != NULL:
                 sdl = <defs.sockaddr_dl*>ifa.ifa_addr
                 nic.type = InterfaceType(sdl.sdl_type)
                 addr.address = LinkAddress(
                     sdl.sdl_data[:sdl.sdl_nlen],
                     ':'.join(['{0:02x}'.format(x) for x in bytearray(sdl.sdl_data[sdl.sdl_nlen:sdl.sdl_nlen+sdl.sdl_alen])]))
+
+        addr.received_packets = ifd.ifi_ipackets
+        addr.received_bytes = ifd.ifi_ibytes
+        addr.sent_packets = ifd.ifi_opackets
+        addr.sent_bytes = ifd.ifi_obytes
 
         nic.addresses.append(addr)
 

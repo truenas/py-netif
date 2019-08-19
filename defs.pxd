@@ -290,6 +290,7 @@ cdef extern from "net/if.h":
         uint64_t ifi_imcasts
         uint64_t ifi_omcasts
         uint64_t ifi_iqdrops
+        uint64_t ifi_oqdrops
         uint64_t ifi_noproto
         uint64_t ifi_hwassist
         time_t ifi_epoch
