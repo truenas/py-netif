@@ -536,20 +536,24 @@ class InterfaceAddress(object):
     def __hash__(self):
         return hash((self.af, self.address, self.netmask, self.broadcast, self.dest_address))
 
-    def __getstate__(self):
+    def __getstate__(self, stats=False):
         ret = {
             'type': self.af.name,
-            'address': self.address.address if type(self.address) is LinkAddress else str(self.address),
-            'received_packets': self.received_packets,
-            'received_errors': self.received_errors,
-            'received_dropped_packets': self.received_dropped_packets,
-            'received_bytes': self.received_bytes,
-            'sent_packets': self.sent_packets,
-            'sent_errors': self.sent_errors,
-            'sent_bytes': self.sent_bytes,
-            'collisions': self.collisions,
-            'sent_dropped_packets': self.sent_dropped_packets,
+            'address': self.address.address if type(self.address) is LinkAddress else str(self.address)
         }
+
+        if stats:
+            ret['stats'] = {
+                'received_packets': self.received_packets,
+                'received_errors': self.received_errors,
+                'received_dropped_packets': self.received_dropped_packets,
+                'received_bytes': self.received_bytes,
+                'sent_packets': self.sent_packets,
+                'sent_errors': self.sent_errors,
+                'sent_bytes': self.sent_bytes,
+                'collisions': self.collisions,
+                'sent_dropped_packets': self.sent_dropped_packets,
+            }
 
         if self.netmask:
             # XXX yuck!
@@ -679,7 +683,7 @@ cdef class NetworkInterface(object):
         else:
             raise NotImplementedError()
 
-    def __getstate__(self):
+    def __getstate__(self, address_stats=False):
         try:
             carp_config = [i.__getstate__() for i in self.carp_config]
         except Exception:
@@ -701,7 +705,7 @@ cdef class NetworkInterface(object):
             'supported_media': list(set(self.supported_media)),
             'media_options': [i.name for i in self.media_options] if self.media_options is not None else None,
             'link_address': self.link_address.address.address,
-            'aliases': [i.__getstate__() for i in self.addresses],
+            'aliases': [i.__getstate__(stats=address_stats) for i in self.addresses],
             'carp_config': carp_config,
         }
 
