@@ -1197,6 +1197,13 @@ cdef class BridgeInterface(NetworkInterface):
 
         return state
 
+    property link_state:
+        def __get__(self):
+            if InterfaceFlags.UP in self.flags:
+                return InterfaceLinkState.LINK_STATE_UP
+            else:
+                return InterfaceLinkState.LINK_STATE_DOWN
+
     def add_member(self, name):
         cdef defs.ifbreq ifbr
 
