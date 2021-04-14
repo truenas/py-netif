@@ -1849,12 +1849,7 @@ class RoutingTable(object):
 
         from bsd import sysctl
         data = sysctl.sysctl([defs.CTL_NET, defs.AF_ROUTE, 0, 0, defs.NET_RT_DUMP, 0])
-        # python3.9 removed tostring in favor of tobytes
-        # so check for attr of tobytes since it was
-        # introduced in 3.2 and we dont want to break
-        # backwards compatibility
-        method = getattr(array.array, 'tobytes', array.array.tostring)
-        data = method(array.array('b', data))
+        data = array.array('b', data).tobytes()
         buf = data
         ptr = 0
 
