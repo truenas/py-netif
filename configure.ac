@@ -22,6 +22,7 @@ dnl Setting appropriate CFLAGS
 CFLAGS="-nostdinc
 -I${freebsd_src}/sys/ 
 -I${freebsd_src}/sbin/ifconfig/ 
+-I${freebsd_src}/lib/libifconfig/
 ${CFLAGS} -I/usr/include"
 
 
