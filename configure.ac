@@ -20,8 +20,7 @@ dnl Setting appropriate CFLAGS
 
 
 CFLAGS="-nostdinc
--I${freebsd_src}/sys/ 
--I${freebsd_src}/sbin/ifconfig/ 
+-I${freebsd_src}/sys/
 ${CFLAGS} -I/usr/include"
 
 
@@ -93,26 +92,6 @@ AX_CHECK_DEFINE(
 	[net/if.h], [IFCAP_POLLING_NOCOUNT],
 	[AC_SUBST(HAVE_IFCAP_POLLING_NOCOUNT, 1)],
 	[AC_SUBST(HAVE_IFCAP_POLLING_NOCOUNT, 0)]
-)
-
-
-SECTION_TITLE([RUNNING TESTS ON ifmedia.c])
-
-
-AC_CHECK_HEADERS([ifmedia.c], [], [AC_ERROR([A working ifmedia.c is required])])
-
-
-dnl Checking ifm_subtype_tokenring_descriptions existence
-AC_MSG_NOTICE([Checking ifm_subtype_tokenring_descriptions existence])
-
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM(
-		[#include <ifmedia.c>],
-		[
-			size_t n = sizeof(ifm_subtype_tokenring_descriptions) /* ; */
-		]
-	)],
-	[AC_DEFINE(HAVE_IFM_SUBTYPE_TOKENRING_DESCRIPTIONS, 1, [FreeBSD with Token Ring support]) AC_MSG_NOTICE([OK])],
-	[AC_MSG_NOTICE([Not found])]
 )
 
 

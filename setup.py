@@ -35,7 +35,7 @@ from Cython.Distutils import build_ext
 extensions = [
     Extension(
         "netif",
-        ["netif.pyx", "ifmedia.c"],
+        ["netif.pyx"],
         extra_compile_args=["-g"],
     )
 ]
