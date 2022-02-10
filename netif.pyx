@@ -42,7 +42,7 @@ from libc.stdlib cimport malloc, realloc, free
 
 
 CLONED_PREFIXES = [
-    'lo', 'tun', 'tap', 'bridge', 'epair', 'carp', 'vlan', 'lagg', 'pflog', 'pfsync',
+    'lo', 'tun', 'tap', 'bridge', 'epair', 'carp', 'vlan', 'lagg', 'pflog', 'pfsync', 'wg',
 ]
 
 
