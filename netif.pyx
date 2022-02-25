@@ -796,8 +796,10 @@ cdef class NetworkInterface(object):
             memset(&ifm, 0, cython.sizeof(ifm))
             strcpy(ifm.ifm_name, self.nameb)
             if self.ioctl(defs.SIOCGIFMEDIA, <void*>&ifm) == -1:
-                if errno != 22: # Invalid argument
+                if errno not in [22, 25]: # Invalid argument, Inappropriate ioctl for device
                     raise OSError(errno, os.strerror(errno))
+
+                return InterfaceLinkState.LINK_STATE_UNKNOWN
 
             if ifm.ifm_status & defs.IFM_AVALID:
                 if ifm.ifm_status & defs.IFM_ACTIVE:
