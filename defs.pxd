@@ -1072,6 +1072,7 @@ cdef extern from "net/if_types.h":
         IFT_ENC
         IFT_PFLOG
         IFT_PFSYNC
+        IFT_WIREGUARD
 
 
 cdef extern from "unistd.h":
